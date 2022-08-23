@@ -1,0 +1,18 @@
+---
+clickhouse:
+  image: "clickhouse/clickhouse-server"
+  imageVersion: "22.8.1.2097"
+  imagePullPolicy: "IfNotPresent"
+  replicas: 3
+  storageClassName: cephfs
+  storageSize: 1Gi
+  loadBalancerIP: 127.0.0.1
+
+clusterDomain: "cluster.local"
+# fullnameOverride:
+
+clickhouseCluster:
+  enabled: true
+  clickhouseKeeper:
+      enabled: true
+      replicas: 3 # must be 3,5,7, etc for quorum

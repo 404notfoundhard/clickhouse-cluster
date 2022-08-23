@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Chart.Name }}-keeper
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-keeper # has to match .spec.template.metadata.labels
+  serviceName: "{{ .Chart.Name }}-keeper"
+  replicas: {{ .Values.clickhouseCluster.clickhouseKeeper.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-keeper # has to match .spec.selector.matchLabels
+    spec:
+      initContainers:
+      - name: busybox
+        image: busybox:latest
+        command: ["/bin/sh", "-c"]
+        args: 
+          - var=$( printenv MY_POD_NAME | grep -Eo '[0-9]$');
+            sed "s/__CHANGEME__/$((var=var+1))/" /tmp/config/keeper_config.xml > /opt/keeper_config.xml;
+        volumeMounts:
+        - name: testdata
+          mountPath: /opt
+        - name: {{ .Chart.Name }}-keeper-config
+          mountPath: /tmp/config
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+      volumes:
+        - name: {{ .Chart.Name }}-keeper-config
+          configMap:
+            name: {{ .Chart.Name }}-keeper-config
+      # terminationGracePeriodSeconds: 10
+      containers:
+      - name: clickhouse-keeper
+        image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
+        ports:
+          - name: tcp-port-int
+            containerPort: 9444
+          - name: tcp-port
+            containerPort: 2181
+        command: ["clickhouse-keeper", "--config", "/opt/keeper_config.xml"]
+        securityContext:
+          runAsUser: 101
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1024Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: testdata
+          mountPath: /opt
+  volumeClaimTemplates:
+  - metadata:
+      name: testdata
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "cephfs"
+      resources:
+        requests:
+          storage: 10Mi
