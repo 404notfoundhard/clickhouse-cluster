@@ -1,0 +1,9 @@
+# ===== INCLUDES
+include:
+  - project: gitlab/ci/auto-release-semver
+    ref: 1.1.2
+    file: .gitlab-ci/auto_release_semver.yml
+  - project: gitlab/ci/build-helm-chart
+    ref: 0.1.0
+    file: .gitlab-ci/build_helm_chart.yml
+# ===== INCLUDES

@@ -1,0 +1,41 @@
+{{- if (.Values.externalClusters) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-ext-clusters
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-clusters
+    app.kubernetes.io/instance: {{ .Release.Name }}-clusters
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
+{{- $replicationPort := .Values.clickhouse.tcp_port }}
+  ExtClusters.xml: |-
+    <?xml version="1.0"?>
+    <yandex>
+        <remote_servers>
+        {{- range $cluster, $configs :=  .Values.externalClusters }}
+            <{{ $cluster }}>
+                {{- range $key, $values := $configs }}
+                <shard>
+                    <weight>{{ $values.weight }}</weight>
+                    <internal_replication>{{ $values.internal_replication }}</internal_replication>
+                    {{- range $values.replicas }}
+                    <replica>
+                        <host>{{ . }}</host>
+                        <port>{{ $replicationPort }}</port>
+                        <!--
+                        <user></user>
+                        <password></password>
+                        <secure></secure>
+                        <compression></compression>
+                        --!>
+                    </replica>
+                    {{- end }}
+                </shard>
+                {{- end }}
+            </{{ $cluster }}>
+        {{- end }}
+        </remote_servers>
+    </yandex>
+{{- end }}

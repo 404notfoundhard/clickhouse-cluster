@@ -1,0 +1,16 @@
+apiVersion: v2
+appVersion: 22.8.1.2097
+name: clickhouse-cluster
+description: A sharded clickhouse cluster with the ability to install 2 replicas in a shard and with the installation of clickhouse-keeper
+home: https://clickhouse.com/
+keywords:
+- clickhouse
+- olap
+- database
+- clickhouse-keeper
+maintainers:
+- email: s.linnik@dcoa.ru
+  name: Stanislav Linnik
+sources:
+- https://gitlab.dev.cems/helm/clickhouse-server
+version: 0.1.0
