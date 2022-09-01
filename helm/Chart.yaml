@@ -1,6 +1,6 @@
 apiVersion: v2
 appVersion: 22.8.1.2097
-name: clickhouse-cluster
+name: clickhouse-server
 description: A sharded clickhouse cluster with the ability to install 2 replicas in a shard and with the installation of clickhouse-keeper
 home: https://clickhouse.com/
 keywords:
