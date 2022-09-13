@@ -91,13 +91,10 @@ spec:
         command: ["clickhouse-keeper", "--config", "/opt/keeper_config.xml"]
         securityContext:
           runAsUser: 101
+        {{- with .Values.clickhouse.configmap.clickhouseKeeper.resources }}
         resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "1024Mi"
-            cpu: "500m"
+        {{- . | toYaml | nindent 12 }}
+        {{- end }}
         volumeMounts:
         - name: testdata
           mountPath: /opt

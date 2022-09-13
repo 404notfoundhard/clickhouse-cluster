@@ -41,6 +41,10 @@ spec:
     {{- end }}
       containers:
       - name: {{ include "clickhouse.fullname" . }}-replica
+        {{- with .Values.clickhouse.resources }}
+        resources:
+        {{- . | toYaml | nindent 12 }}
+        {{- end }}
         image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
         imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
         ports:

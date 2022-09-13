@@ -85,6 +85,13 @@ metrics:
     honorLabels: 
 
 clickhouse:
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 500Mi
+    limits:
+      cpu: 1
+      memory: 1000Mi
   ## StatefulSet controller supports relax its ordering guarantees while preserving its uniqueness and identity guarantees. There are two valid pod management policies: OrderedReady and Parallel
   ## ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#pod-management-policy
   ##
@@ -134,9 +141,9 @@ clickhouse:
   ## More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
   readinessProbe:
     enabled: true
-    initialDelaySeconds: "5"
-    periodSeconds: "30"
-    timeoutSeconds: "5"
+    initialDelaySeconds: "4"
+    periodSeconds: "2"
+    timeoutSeconds: "3"
     failureThreshold: "3"
     successThreshold: "1"
   ## volumeClaimTemplates is a list of claims that pods are allowed to reference. 
@@ -273,6 +280,13 @@ clickhouse:
       replicas: 3 # must be 3,5,7, etc for quorum
       # tcp_port: 2181 # default value
       # raft_port: 9444 # default value
+      resources:
+        requests:
+          cpu: 0.5
+          memory: 500Mi
+        limits:
+          cpu: 1
+          memory: 1000Mi
       coordination_settings: {}
       customLabels: {}
       podAntiAffinity:
