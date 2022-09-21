@@ -12,7 +12,7 @@ clusterDomain: "svc.k8s"
 # nodeSelector: {"beta.kubernetes.io/arch": "amd64"}
 # tolerations: []
 ## Clickhouse pod/node affinity/anti-affinity
-## 
+##
 #affinity:
 #  nodeAffinity:
 #    requiredDuringSchedulingIgnoredDuringExecution:
@@ -36,30 +36,30 @@ clusterDomain: "svc.k8s"
 #     - replica2_name1
 #     - replica2_name2
 acl:
-  profiles: 
+  profiles:
     enabled: true
-    profile: 
+    profile:
     - name: "default"
-      config: 
+      config:
         max_memory_usage: "10000000000"
         use_uncompressed_cache: "0"
         load_balancing: "random"
-  users: 
+  users:
     enabled: true
-    user: 
+    user:
     - name: "default"
       config:
         #password: ""
-        networks: 
+        networks:
         - "::/0"
         profile: "default"
         quota: "default"
-  quotas: 
+  quotas:
     enabled: true
-    quota: 
+    quota:
     - name: "default"
-      config: 
-      - duration: "3600"
+      config:
+        duration: "3600"
         queries: "0"
         errors: "0"
         result_rows: "0"
@@ -73,16 +73,16 @@ metrics:
   serviceMonitor:
     enabled: true
     additionalLabels: {}
-    prometheusSelector: 
+    prometheusSelector:
       service-monitor: "true"
-    # jobLabel: 
+    # jobLabel:
     selector:
-    namespace: 
-    interval: 
-    scrapeTimeout: 
-    relabelings: 
-    metricRelabelings: 
-    honorLabels: 
+    namespace:
+    interval:
+    scrapeTimeout:
+    relabelings:
+    metricRelabelings:
+    honorLabels:
 
 clickhouse:
   resources:
@@ -120,15 +120,15 @@ clickhouse:
   ##
   ## Port for exchanging data between ClickHouse servers.
   interserver_http_port: "9009"
-  ## 
+  ##
   ## The instance number of Clickhouse
   replicas: "3"
   ## Clickhouse image configuration.
   image: "clickhouse/clickhouse-server"
   imageVersion: "22.8.1.2097"
   imagePullPolicy: "IfNotPresent"
-  #imagePullSecrets: 
-  ## Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated. 
+  #imagePullSecrets:
+  ## Periodic probe of container liveness. Container will be restarted if the probe fails. Cannot be updated.
   ## More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
   livenessProbe:
     enabled: true
@@ -137,7 +137,7 @@ clickhouse:
     timeoutSeconds: "5"
     failureThreshold: "3"
     successThreshold: "1"
-  ## Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated. 
+  ## Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated.
   ## More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
   readinessProbe:
     enabled: true
@@ -146,40 +146,40 @@ clickhouse:
     timeoutSeconds: "3"
     failureThreshold: "3"
     successThreshold: "1"
-  ## volumeClaimTemplates is a list of claims that pods are allowed to reference. 
-  ## The StatefulSet controller is responsible for mapping network identities to claims in a way that maintains the identity of a pod. 
-  ## Every claim in this list must have at least one matching (by name) volumeMount in one container in the template. 
+  ## volumeClaimTemplates is a list of claims that pods are allowed to reference.
+  ## The StatefulSet controller is responsible for mapping network identities to claims in a way that maintains the identity of a pod.
+  ## Every claim in this list must have at least one matching (by name) volumeMount in one container in the template.
   ## A claim in this list takes precedence over any volumes in the template, with the same name.
   persistentVolumeClaim:
     enabled: false
     ## Clickhouse data volume
-    dataPersistentVolume: 
+    dataPersistentVolume:
       enabled: false
-      accessModes: 
+      accessModes:
       - "ReadWriteOnce"
       storageClassName: "-"
-      storage: "500Gi"
+      storage: "5Gi"
     ## Clickhouse logs volume
     logsPersistentVolume:
       enabled: false
-      accessModes: 
+      accessModes:
       - "ReadWriteOnce"
       storageClassName: "-"
-      storage: "50Gi"
+      storage: "2Gi"
   ##
   ## An API object that manages external access to the services in a cluster, typically HTTP.
   ## Ingress can provide load balancing, SSL termination and name-based virtual hosting.
-  ingress: 
+  ingress:
     enabled: false
   #  host: "clickhouse.domain.com"
   #  path: "/"
-  #  tls: 
+  #  tls:
   #    enabled: false
-  #    hosts: 
+  #    hosts:
   #    - "clickhouse.domain.com"
   #    - "clickhouse.domain1.com"
   #    secretName: "clickhouse-secret"
-  ## 
+  ##
   ## Clickhouse config.xml and metrica.xml
   configmap:
     ##
@@ -232,7 +232,7 @@ clickhouse:
     ## The host name that can be used by other servers to access this server.
     ## If omitted, it is defined in the same way as the hostname-f command.
     ## Useful for breaking away from a specific network interface.
-    #interserver_http_host: 
+    #interserver_http_host:
     ##
     ## Logging settings.
     # path – The log path. Default value: /var/log/clickhouse-server.
@@ -243,7 +243,7 @@ clickhouse:
       path: "/var/log/clickhouse-server"
       level: "trace"
       size: "1000M"
-      count: "10"
+      count: "2"
     ##
     ## Data compression settings.
     # min_part_size – The minimum size of a table part.
@@ -298,16 +298,16 @@ clickhouse:
         serviceMonitor:
           enabled: true
           additionalLabels: {}
-          prometheusSelector: 
+          prometheusSelector:
             service-monitor: "true"
-          # jobLabel: 
+          # jobLabel:
           selector:
-          namespace: 
-          interval: 
-          scrapeTimeout: 
-          relabelings: 
-          metricRelabelings: 
-          honorLabels: 
+          namespace:
+          interval:
+          scrapeTimeout:
+          relabelings:
+          metricRelabelings:
+          honorLabels:
     ##
     ## Configuration of clusters used by the Distributed table engine.
     ## The parameters host, port, and optionally user, password, secure, compression are specified for each server:
@@ -320,7 +320,7 @@ clickhouse:
     remote_servers:
       enabled: true
       internal_replication: false
-      replica: 
+      replica:
         user: "default"
         #password: ""
         compression: true

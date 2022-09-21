@@ -1,4 +1,5 @@
 {{- if .Values.clickhouse.configmap.enabled }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -29,7 +30,7 @@ data:
         <tmp_path>{{ printf "%s/tmp/" (include "clickhouse.fullpath" .) }}</tmp_path>
         <user_files_path>{{ printf "%s/user_files/" (include "clickhouse.fullpath" .) }}</user_files_path>
         <format_schema_path>{{ printf "%s/format_schemas/" (include "clickhouse.fullpath" .) }}</format_schema_path>
-        <users_config>users.xml</users_config>        
+        <users_config>users.xml</users_config>
         <display_name>{{ template "clickhouse.fullname" . }}</display_name>
         <listen_host>0.0.0.0</listen_host>
         <http_port>{{ .Values.clickhouse.http_port | default "8123" }}</http_port>

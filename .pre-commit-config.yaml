@@ -1,0 +1,21 @@
+---
+fail_fast: false
+default_stages: [commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        files: \.(c|cpp|html|erb|slim|haml|ejs|jade|js|coffee|json|rb|py|css|scss|less|sh|tmpl|yaml|yml|pp|j2|go)$
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: check-xml
+      - id: check-json
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.17
+    hooks:
+      - id: helmlint

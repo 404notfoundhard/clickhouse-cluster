@@ -1,4 +1,5 @@
 {{- if .Values.clickhouse.configmap.enabled }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -54,10 +55,8 @@ data:
         {{- range $key, $value := .Values.acl.quotas.quota }}
         {{- with . }}
             <{{ .name }}>
-            {{- range $val := .config }}
-            {{- range $k_1, $v_1 := $val }}
+            {{- range $k_1, $v_1 := .config }}
                 <{{ $k_1 }}>{{ $v_1 }}</{{ $k_1 }}>
-            {{- end }}
             {{- end }}
             </{{ .name }}>
         {{- end }}

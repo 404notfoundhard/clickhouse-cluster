@@ -1,0 +1,11 @@
+extends: relaxed
+
+ignore: |
+  venv
+  .venv
+  roles
+  tests
+  plays/infra/elastiflow/files
+
+rules:
+  line-length: disable

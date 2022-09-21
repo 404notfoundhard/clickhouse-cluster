@@ -1,4 +1,5 @@
 {{- if .Values.clickhouse.configmap.enabled }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -81,7 +82,7 @@ data:
                       {{- end }}
                     </replica>
                     {{- end }}
-                </shard>   
+                </shard>
             {{- end }}
             </{{ .Release.Name }}>
         </remote_servers>

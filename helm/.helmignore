@@ -19,3 +19,4 @@
 .project
 .idea/
 *.tmproj
+.pre-commit-config.yam
