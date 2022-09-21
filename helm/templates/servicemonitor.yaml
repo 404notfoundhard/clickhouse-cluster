@@ -1,4 +1,5 @@
 {{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled }}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -8,7 +9,7 @@ metadata:
   {{- else }}
   namespace: {{ .Release.Namespace }}
   {{- end }}
-  labels: 
+  labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: metrics
@@ -21,7 +22,7 @@ spec:
   jobLabel: {{ .Values.metrics.serviceMonitor.jobLabel }}
   {{- end }}
   selector:
-    matchLabels: 
+    matchLabels:
       app.kubernetes.io/name: {{ include "clickhouse.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- if .Values.metrics.serviceMonitor.selector }}

@@ -26,7 +26,7 @@ spec:
                 matchExpressions:
                   - key: "app.kubernetes.io/name"
                     operator: In
-                    values: 
+                    values:
                       - {{ .Chart.Name }}-keeper
                   - key: "app.kubernetes.io/release"
                     operator: In
@@ -38,7 +38,7 @@ spec:
       - name: busybox
         image: busybox:1.35.0
         command: ["/bin/sh", "-c"]
-        args: 
+        args:
           - var=$( printenv MY_POD_NAME | grep -Eo '[0-9]$');
             sed "s/__CHANGEME__/$((var=var+1))/" /tmp/config/keeper_config.xml > /opt/keeper_config.xml;
         volumeMounts:

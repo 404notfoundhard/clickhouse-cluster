@@ -1,4 +1,5 @@
 {{- if (.Values.externalClusters) }}
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -23,7 +24,7 @@ data:
                     {{- range $values.replicas }}
                     <replica>
                         <host>{{ . }}</host>
-                        <port>{{ $replicationPort }}</port>
+                        <port>{{ $replicationPort | default 9000 }}</port>
                         <!--
                         <user></user>
                         <password></password>
