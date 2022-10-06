@@ -12,16 +12,18 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "clickhouse.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+    {{- if .Values.fullnameOverride -}}
+        {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+    {{- else if .Values.fullNameClassic -}}
+        {{- $name := default .Chart.Name .Values.nameOverride -}}
+        {{- if contains $name .Release.Name -}}
+            {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+        {{- else -}}
+            {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+        {{- end -}}
+    {{- else -}}
+        {{- print "clickhouse" -}}
+    {{- end -}}
 {{- end -}}
 
 {{/*
@@ -36,8 +38,8 @@ Create clickhouse path.
 if .Values.clickhouse.path is empty, default value "/var/lib/clickhouse".
 */}}
 {{- define "clickhouse.fullpath" -}}
-{{- if .Values.clickhouse.path -}}
-{{- .Values.clickhouse.path | trunc 63 | trimSuffix "-" -}}
+{{- if .Values.clickhouse.config.clickhouseDefaults.path -}}
+{{- .Values.clickhouse.config.clickhouseDefaults.path | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s" "/var/lib/clickhouse" -}}
 {{- end -}}
@@ -45,11 +47,11 @@ if .Values.clickhouse.path is empty, default value "/var/lib/clickhouse".
 
 {{/*
 Create clickhouse log path.
-if .Values.clickhouse.configmap.logger.path is empty, default value "/var/log/clickhouse-server".
+if .Values.clickhouse.config.logger.path is empty, default value "/var/log/clickhouse-server".
 */}}
 {{- define "clickhouse.logpath" -}}
-{{- if .Values.clickhouse.configmap.logger.path -}}
-{{- .Values.clickhouse.configmap.logger.path | trunc 63 | trimSuffix "-" -}}
+{{- if .Values.clickhouse.config.logs.logger.log -}}
+{{- .Values.clickhouse.config.logs.logger.log | dir | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s" "/var/log/clickhouse-server" -}}
 {{- end -}}
@@ -57,17 +59,21 @@ if .Values.clickhouse.configmap.logger.path is empty, default value "/var/log/cl
 
 {{- define "clickhouse-keeper.fullname" -}}
 {{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- $postfix := "keeper" -}}
+  {{- printf "%s-%s" $postfix .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else if .Values.fullNameClassic -}}
+  {{- $name := default .Chart.Name .Values.nameOverride -}}
+  {{- $postfix := "keeper" -}}
+  {{- if contains $name .Release.Name -}}
+    {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- printf "%s-%s-%s" .Release.Name $name $postfix | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
 {{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- $postfix := "keeper" -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name $postfix | trunc 63 | trimSuffix "-" -}}
+  {{- print "clickhouse-keeper" -}}
 {{- end -}}
 {{- end -}}
-{{- end -}}
+
 
 {{- define "common.tplvalues.render" -}}
     {{- if typeIs "string" .value }}
@@ -75,4 +81,11 @@ if .Values.clickhouse.configmap.logger.path is empty, default value "/var/log/cl
     {{- else }}
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
+{{- end -}}
+
+{{- define "migration.svc" -}}
+  {{- $repo := regexReplaceAll "https://" .Values.migration.repo "" -}}
+  {{- $proto := "https://" -}}
+  {{- $credentials := printf "%s%s%s" "oauth2:" .Values.migration.repoToken "@" -}}
+  {{- printf "%s%s%s" $proto $credentials $repo -}}
 {{- end -}}

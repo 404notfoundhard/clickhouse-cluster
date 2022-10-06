@@ -1,0 +1,70 @@
+{{- if (.Values.clickhouse.config) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-configs
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-configs
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{- if .Values.clickhouse.metrics.enabled }}
+  metrics.xml: |-
+    <?xml version="1.0"?>
+    <yandex>
+        <prometheus>
+            <endpoint>{{.Values.clickhouse.metrics.endpoint | default "/metrics" }}</endpoint>
+            <port>{{ .Values.clickhouse.metrics.port | default 9363 }}</port>
+            <metrics>true</metrics>
+            <events>true</events>
+            <asynchronous_metrics>true</asynchronous_metrics>
+            <status_info>true</status_info>
+        </prometheus>
+    </yandex>
+{{- end }}
+  logs.xml: |-
+    <?xml version="1.0"?>
+    <yandex>
+      {{- range $keys, $values := .Values.clickhouse.config.logs }}
+        <{{ $keys }}>
+        {{- range $kk, $vv := $values }}
+            <{{ $kk }}>{{ $vv }}</{{ $kk }}>
+        {{- end }}
+        </{{ $keys }}>
+      {{- end }}
+    </yandex>
+
+  merge_tree.xml: |-
+    <?xml version="1.0"?>
+    <yandex>
+      {{- if .Values.clickhouse.config.merge_tree }}
+      <merge_tree>
+          {{- range $key, $value := .Values.clickhouse.config.merge_tree }}
+          <{{ $key }}>{{ $value }}</{{ $key }}>
+          {{- end }}
+      </merge_tree>
+      {{- else }}
+      <merge_tree>
+          <max_suspicious_broken_parts>5</max_suspicious_broken_parts>
+      </merge_tree>
+      {{- end }}
+    </yandex>
+
+  compression.xml: |-
+    <?xml version="1.0"?>
+    <yandex>
+      <compression>
+        {{- range .Values.clickhouse.config.compression.cases }}
+        {{- with . }}
+        <case>
+            <min_part_size>{{ .min_part_size }}</min_part_size>
+            <min_part_size_ratio>{{ .min_part_size_ratio }}</min_part_size_ratio>
+            <method>{{ .method }}</method>
+        </case>
+        {{- end }}
+        {{- end }}
+      </compression>
+    </yandex>
+{{- end }}

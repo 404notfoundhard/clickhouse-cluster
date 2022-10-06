@@ -1,0 +1,35 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration-tool
+  annotations:
+    "helm.sh/hook": "post-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migration-tool
+        image: {{ .Values.migration.image }}:{{ .Values.migration.imageVersion }}
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh","-c"]
+        env:
+          - name: ENV_USER
+            value: {{ .Values.migration.migrationUser | quote }}
+          - name: ENV_PASSWORD
+            {{- if .Values.migration.migrationPassword }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "clickhouse.fullname" . }}-secret
+                key: MIGRATION_PASSWORD
+            {{- else }}
+            value: ""
+            {{- end }}
+        args:
+          - |
+            apt update && apt install git -y;
+            GIT_SSL_NO_VERIFY=true git clone -b {{ .Values.migration.repoRef }} --single-branch {{ include "migration.svc" . }} ;
+            {{ .Values.migration.command | nindent 12 }}
+{{- end }}

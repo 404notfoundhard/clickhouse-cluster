@@ -11,8 +11,8 @@
 
   echo URL            : http://127.0.0.1:8080/
   echo Management URL : http://127.0.0.1:8080/manager
-  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 8123:{{ .Values.clickhouse.http_port }}
-  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 9000:{{ .Values.clickhouse.tcp_port }}
-  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 9009:{{ .Values.clickhouse.interserver_http_port }}
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 8123:{{ .Values.clickhouse.httpPort }}
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 9000:{{ .Values.clickhouse.tcpPort }}
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ template "clickhouse.fullname" . }} 9009:{{ .Values.clickhouse.interserverHttpPort }}
 
 {{- end }}

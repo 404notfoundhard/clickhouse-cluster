@@ -1,0 +1,121 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  ports:
+  - port: {{ .Values.clickhouse.tcpPort }}
+    targetPort: tcp-port
+    protocol: TCP
+    name: tcp-port
+  - port: {{ .Values.clickhouse.httpPort }}
+    targetPort: http-port
+    protocol: TCP
+    name: http-port
+  - port: {{ .Values.clickhouse.interserverHttpPort }}
+    targetPort: inter-http-port
+    protocol: TCP
+    name: inter-http-port
+  {{- if .Values.clickhouse.metrics.enabled }}
+  - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  {{- end }}
+  selector:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-headless
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-headless
+    app.kubernetes.io/instance: {{ .Release.Name }}-headless
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  clusterIP: "None"
+  ports:
+  - port: {{ .Values.clickhouse.tcpPort }}
+    targetPort: tcp-port
+    protocol: TCP
+    name: tcp-port
+  - port: {{ .Values.clickhouse.httpPort }}
+    targetPort: http-port
+    protocol: TCP
+    name: http-port
+  - port: {{ .Values.clickhouse.interserverHttpPort }}
+    targetPort: inter-http-port
+    protocol: TCP
+    name: inter-http-port
+  selector:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+
+{{- if .Values.clickhouse.config.remoteServers.replica.backup.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-replica-headless
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica-headless
+    app.kubernetes.io/instance: {{ .Release.Name }}-replica-headless
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  clusterIP: "None"
+  ports:
+  - port: {{ .Values.clickhouse.tcpPort }}
+    targetPort: tcp-port
+    protocol: TCP
+    name: tcp-port
+  - port: {{ .Values.clickhouse.httpPort }}
+    targetPort: http-port
+    protocol: TCP
+    name: http-port
+  - port: {{ .Values.clickhouse.interserverHttpPort }}
+    targetPort: inter-http-port
+    protocol: TCP
+    name: inter-http-port
+  selector:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-replica
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
+    app.kubernetes.io/instance: {{ .Release.Name }}-replica
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  ports:
+  - port: {{ .Values.clickhouse.tcpPort }}
+    targetPort: tcp-port
+    protocol: TCP
+    name: tcp-port
+  - port: {{ .Values.clickhouse.httpPort }}
+    targetPort: http-port
+    protocol: TCP
+    name: http-port
+  - port: {{ .Values.clickhouse.interserverHttpPort }}
+    targetPort: inter-http-port
+    protocol: TCP
+    name: inter-http-port
+  selector:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+{{- end }}
