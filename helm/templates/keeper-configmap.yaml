@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clickhouse-keeper.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{- $replicas := int .Values.clickhouse.config.clickhouseKeeper.replicas }}
+{{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
+  keeper_config.xml: |-
+    <yandex>
+      <max_connections>{{ .Values.clickhouse.config.clickhouseKeeper.max_connections | default 4096 }}</max_connections>
+      <listen_host>0.0.0.0</listen_host>
+      <keeper_server>
+        <tcp_port>{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default "2181" }}</tcp_port>
+        <server_id>__CHANGEME__</server_id>
+        <log_storage_path>/var/lib/clickhouse/log</log_storage_path>
+        <snapshot_storage_path>/var/lib/clickhouse/snapshots</snapshot_storage_path>
+
+        <coordination_settings>
+          {{- range $key, $value := .Values.clickhouse.config.clickhouseKeeper.coordinationSettings }}
+            <{{ $key }}>{{ $value }}</{{ $key }}>
+          {{- end }}
+        </coordination_settings>
+
+        <raft_configuration>
+        {{- range untilStep 0 $replicas 1 }}
+            <server>
+                <id>{{ add . 1 }}</id>
+                <hostname>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</hostname>
+                <port>{{ $.Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}</port>
+            </server>
+        {{- end }}
+        </raft_configuration>
+      </keeper_server>
+    </yandex>

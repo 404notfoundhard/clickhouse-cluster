@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse-keeper.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  publishNotReadyAddresses: True
+  ports:
+  - port: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+    targetPort: tcp-connect
+    protocol: TCP
+    name: tcp-connect
+  {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
+  - port: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.port | default 9141 }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  {{- end }}
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/component: clickhouse-keeper
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse-keeper.fullname" . }}-headless
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  clusterIP: "None"
+  publishNotReadyAddresses: True
+  ports:
+  - port: {{ .Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}
+    targetPort: tcp-raft
+    protocol: TCP
+    name: tcp-raft
+  - port: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+    targetPort: tcp-connect
+    protocol: TCP
+    name: tcp-connect
+  selector:
+    app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/component: clickhouse-keeper

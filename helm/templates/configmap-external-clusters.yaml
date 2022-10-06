@@ -1,4 +1,4 @@
-{{- if (.Values.externalClusters) }}
+{{- if (.Values.additionalClusters) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -6,31 +6,29 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}-ext-clusters
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-clusters
-    app.kubernetes.io/instance: {{ .Release.Name }}-clusters
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
 {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
-{{- $replicationPort := .Values.clickhouse.tcp_port }}
-  ExtClusters.xml: |-
+{{- $replicationPort := .Values.clickhouse.tcpPort }}
+  ext-clusters.xml: |-
     <?xml version="1.0"?>
     <yandex>
         <remote_servers>
-        {{- range $cluster, $configs :=  .Values.externalClusters }}
+        {{- range $cluster, $configs :=  .Values.additionalClusters }}
             <{{ $cluster }}>
                 {{- range $key, $values := $configs }}
                 <shard>
-                    <weight>{{ $values.weight }}</weight>
-                    <internal_replication>{{ $values.internal_replication }}</internal_replication>
+                    <internal_replication>{{ $values.internalReplication }}</internal_replication>
                     {{- range $values.replicas }}
                     <replica>
                         <host>{{ . }}</host>
                         <port>{{ $replicationPort | default 9000 }}</port>
-                        <!--
-                        <user></user>
-                        <password></password>
-                        <secure></secure>
-                        <compression></compression>
-                        --!>
+                        {{- if $.Values.additionalClustersCredentials }}
+                        <user>{{ $.Values.additionalClustersCredentials.user }}</user>
+                        <password from_env="EXT_REPLICATION_PASSWORD"/>
+                        {{- end }}
                     </replica>
                     {{- end }}
                 </shard>

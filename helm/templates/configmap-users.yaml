@@ -1,4 +1,4 @@
-{{- if .Values.clickhouse.configmap.enabled }}
+{{- if (.Values.clickhouse.config) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -6,7 +6,8 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}-users
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-users
-    app.kubernetes.io/instance: {{ .Release.Name }}-users
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   users.xml: |-
@@ -26,16 +27,15 @@ data:
         </profiles>
     {{- end }}
 
-    {{- if .Values.acl.users.enabled }}
+    {{- if (.Values.acl.users) }}
         <users>
-        {{- range $key, $value := .Values.acl.users.user }}
-        {{- with . }}
-            <{{ .name }}>
-            {{- range $k_1, $v_1 := .config }}
+        {{- range $key, $value := .Values.acl.users }}
+            <{{ $key }}>
+            {{- range $k_1, $v_1 := $value }}
             {{- if (eq "networks" $k_1) }}
-                <networks incl="networks" replace="replace">
+                <networks>
                 {{- range $v_1 }}
-                {{- with .}}
+                {{- with . }}
                     <ip>{{ . }}</ip>
                 {{- end }}
                 {{- end }}
@@ -44,12 +44,22 @@ data:
                 <{{ $k_1 }}>{{ $v_1 }}</{{ $k_1 }}>
             {{- end }}
             {{- end }}
-            </{{ .name }}>
+            </{{ $key }}>
+            {{- end }}
         {{- end }}
+        {{- if .Values.clickhouse.config.remoteServers.enabled }}
+            <{{ .Values.clickhouse.config.remoteServers.replica.user }}>
+                <profile>default</profile>
+                <quota>default</quota>
+                <networks>
+                    {{- range .Values.clickhouse.config.remoteServers.replica.aclNetwork }}
+                    <ip>{{ . }}</ip>
+                    {{- end }}
+                </networks>
+                <password from_env="REPLICATION_PASSWORD" />
+            </{{ .Values.clickhouse.config.remoteServers.replica.user }}>
         {{- end }}
         </users>
-    {{- end }}
-
     {{- if .Values.acl.quotas.enabled }}
         <quotas>
         {{- range $key, $value := .Values.acl.quotas.quota }}
