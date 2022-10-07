@@ -13,7 +13,7 @@ data:
 {{- if .Values.clickhouse.metrics.enabled }}
   metrics.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
         <prometheus>
             <endpoint>{{.Values.clickhouse.metrics.endpoint | default "/metrics" }}</endpoint>
             <port>{{ .Values.clickhouse.metrics.port | default 9363 }}</port>
@@ -22,11 +22,11 @@ data:
             <asynchronous_metrics>true</asynchronous_metrics>
             <status_info>true</status_info>
         </prometheus>
-    </yandex>
+    </clickhouse>
 {{- end }}
   logs.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
       {{- range $keys, $values := .Values.clickhouse.config.logs }}
         <{{ $keys }}>
         {{- range $kk, $vv := $values }}
@@ -34,11 +34,11 @@ data:
         {{- end }}
         </{{ $keys }}>
       {{- end }}
-    </yandex>
+    </clickhouse>
 
   merge_tree.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
       {{- if .Values.clickhouse.config.merge_tree }}
       <merge_tree>
           {{- range $key, $value := .Values.clickhouse.config.merge_tree }}
@@ -50,11 +50,11 @@ data:
           <max_suspicious_broken_parts>5</max_suspicious_broken_parts>
       </merge_tree>
       {{- end }}
-    </yandex>
+    </clickhouse>
 
   compression.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
       <compression>
         {{- range .Values.clickhouse.config.compression.cases }}
         {{- with . }}
@@ -66,5 +66,5 @@ data:
         {{- end }}
         {{- end }}
       </compression>
-    </yandex>
+    </clickhouse>
 {{- end }}

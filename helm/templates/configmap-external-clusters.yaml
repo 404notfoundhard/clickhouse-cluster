@@ -14,7 +14,7 @@ data:
 {{- $replicationPort := .Values.clickhouse.tcpPort }}
   ext-clusters.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
         <remote_servers>
         {{- range $cluster, $configs :=  .Values.additionalClusters }}
             <{{ $cluster }}>
@@ -36,5 +36,5 @@ data:
             </{{ $cluster }}>
         {{- end }}
         </remote_servers>
-    </yandex>
+    </clickhouse>
 {{- end }}
