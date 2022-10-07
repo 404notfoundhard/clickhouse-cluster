@@ -12,7 +12,7 @@ metadata:
 data:
   config.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
       <include_from>/etc/clickhouse-server/macros.d/macros.xml</include_from>
       <macros incl="macros_include" />
       <listen_host>0.0.0.0</listen_host>
@@ -20,7 +20,7 @@ data:
       <tcp_port>{{ .Values.clickhouse.tcpPort | default "9000" }}</tcp_port>
       <interserver_http_port>{{ .Values.clickhouse.interserverHttpPort | default "9009" }}</interserver_http_port>
       <display_name>{{ template "clickhouse.fullname" . }}</display_name>
-      <users_config>users.xml</users_config>
+      <users_config>dcoa_users.xml</users_config>
     {{- range $key, $value := .Values.clickhouse.config.clickhouseDefaults }}
       <{{ $key }}>{{ $value }}</{{ $key }}>
     {{- end }}
@@ -30,5 +30,5 @@ data:
         <{{ $key }}>{{ $value }}</{{ $key }}>
       {{- end }}
       </distributed_ddl>
-    </yandex>
+    </clickhouse>
 {{- end }}

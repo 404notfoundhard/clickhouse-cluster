@@ -14,7 +14,7 @@ data:
 {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
   macros.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
       <macros_include>
           {{- if (.Values.clickhouse.config.macros.override) }}
           <{{ .Values.clickhouse.config.macros.override.replicaOverride }} from_env="HOSTNAME" />
@@ -29,11 +29,11 @@ data:
           {{- end }}
           {{- end }}
       </macros_include>
-    </yandex>
+    </clickhouse>
 
   clusters.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
         {{- if .Values.clickhouse.config.zookeeperServers.enabled }}
         <zookeeper>
             {{- range .Values.clickhouse.config.zookeeperServers.config }}
@@ -107,5 +107,5 @@ data:
           {{- end }}
         </remote_servers>
         {{- end }}
-    </yandex>
+    </clickhouse>
 {{- end }}

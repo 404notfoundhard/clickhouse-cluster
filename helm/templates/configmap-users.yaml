@@ -10,9 +10,9 @@ metadata:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-  users.xml: |-
+  dcoa_users.xml: |-
     <?xml version="1.0"?>
-    <yandex>
+    <clickhouse>
     {{- if .Values.acl.profiles.enabled }}
         <profiles>
         {{- range .Values.acl.profiles.profile }}
@@ -73,5 +73,5 @@ data:
         {{- end }}
         </quotas>
     {{- end }}
-    </yandex>
+    </clickhouse>
 {{- end }}
