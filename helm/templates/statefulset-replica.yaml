@@ -110,8 +110,8 @@ spec:
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
-              mountPath: /etc/clickhouse-server/dcoa_users.xml
-              subPath: dcoa_users.xml
+              mountPath: /etc/clickhouse-server/users.xml
+              subPath: users.xml
             - name: clickhouse-config
               mountPath: /etc/clickhouse-server/config.xml
               subPath: config.xml
@@ -136,8 +136,8 @@ spec:
           configMap:
             name: {{ include "clickhouse.fullname" . }}-users
             items:
-            - key: dcoa_users.xml
-              path: dcoa_users.xml
+            - key: users.xml
+              path: users.xml
         - name: clickhouse-macros
           configMap:
             name: {{ include "clickhouse.fullname" . }}-clusters
