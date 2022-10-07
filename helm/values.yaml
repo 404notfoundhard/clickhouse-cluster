@@ -77,7 +77,13 @@ clickhouse:
       cpu: 2
       memory: 4Gi
 
+  replicas: 1
+  image: "clickhouse/clickhouse-server"
+  imageVersion: "22.8.1.2097"
+  imagePullPolicy: "IfNotPresent"
+
   podManagementPolicy: "Parallel"
+  updateStrategy: "RollingUpdate"
 
   metrics:
     enabled: false
@@ -100,16 +106,10 @@ clickhouse:
   # affinity:
   #   preset: "required"
 
-  updateStrategy: "RollingUpdate"
-  path: "/var/lib/clickhouse"
   httpPort: "8123"
   tcpPort: "9000"
   interserverHttpPort: "9009"
 
-  replicas: 1
-  image: "clickhouse/clickhouse-server"
-  imageVersion: "22.8.1.2097"
-  imagePullPolicy: "IfNotPresent"
   livenessProbe:
     httpGet:
       path: /ping

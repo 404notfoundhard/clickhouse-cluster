@@ -33,17 +33,6 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{/*
-Create clickhouse path. 
-if .Values.clickhouse.path is empty, default value "/var/lib/clickhouse".
-*/}}
-{{- define "clickhouse.fullpath" -}}
-{{- if .Values.clickhouse.config.clickhouseDefaults.path -}}
-{{- .Values.clickhouse.config.clickhouseDefaults.path | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" "/var/lib/clickhouse" -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Create clickhouse log path.
