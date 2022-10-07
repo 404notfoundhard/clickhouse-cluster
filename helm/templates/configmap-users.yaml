@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-  dcoa_users.xml: |-
+  users.xml: |-
     <?xml version="1.0"?>
     <clickhouse>
     {{- if .Values.acl.profiles.enabled }}

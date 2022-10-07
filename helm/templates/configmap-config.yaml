@@ -20,7 +20,7 @@ data:
       <tcp_port>{{ .Values.clickhouse.tcpPort | default "9000" }}</tcp_port>
       <interserver_http_port>{{ .Values.clickhouse.interserverHttpPort | default "9009" }}</interserver_http_port>
       <display_name>{{ template "clickhouse.fullname" . }}</display_name>
-      <users_config>dcoa_users.xml</users_config>
+      <users_config>users.xml</users_config>
     {{- range $key, $value := .Values.clickhouse.config.clickhouseDefaults }}
       <{{ $key }}>{{ $value }}</{{ $key }}>
     {{- end }}
