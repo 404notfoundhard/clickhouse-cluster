@@ -17,7 +17,7 @@ spec:
   loadBalancerIP: {{ .Values.clickhouse.externalAccess.loadBalancerIP }}
   {{- end }}
   ports:
-    - name: http
+    - name: tcp
       port: {{ .Values.clickhouse.tcpPort }}
       targetPort: tcp
       protocol: TCP
