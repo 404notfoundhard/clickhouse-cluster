@@ -1,0 +1,29 @@
+{{- if .Values.clickhouse.externalAccess.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-lb
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  publishNotReadyAddresses: True
+  selector:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+  {{- if .Values.clickhouse.externalAccess.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.clickhouse.externalAccess.loadBalancerIP }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.clickhouse.tcpPort }}
+      targetPort: tcp
+      protocol: TCP
+    - name: http
+      port: {{ .Values.clickhouse.httpPort }}
+      targetPort: http
+      protocol: TCP
+  type: LoadBalancer
+{{- end }}

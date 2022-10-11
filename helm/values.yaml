@@ -110,6 +110,10 @@ clickhouse:
   tcpPort: "9000"
   interserverHttpPort: "9009"
 
+  externalAccess:
+    enabled: false
+    # loadBalancerIP: 10.10.10.10
+
   livenessProbe:
     httpGet:
       path: /ping
