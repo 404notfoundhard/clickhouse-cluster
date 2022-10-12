@@ -37,6 +37,7 @@ spec:
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         checksum/configmap-users: {{ include (print $.Template.BasePath "/configmap-users.yaml") . | sha256sum }}
+        checksum/configmap-config: {{ include (print $.Template.BasePath "/configmap-config.yaml") . | sha256sum }}
     spec:
     {{- if .Values.clickhouse.affinity }}
       affinity:
