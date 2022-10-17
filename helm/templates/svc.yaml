@@ -5,8 +5,8 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/release: {{ .Release.Name }}
 spec:
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
@@ -98,8 +98,8 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}-replica
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
-    app.kubernetes.io/instance: {{ .Release.Name }}-replica
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/release: {{ .Release.Name }}
 spec:
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
@@ -114,6 +114,12 @@ spec:
     targetPort: inter-http-port
     protocol: TCP
     name: inter-http-port
+  {{- if .Values.clickhouse.metrics.enabled }}
+  - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  {{- end }}
   selector:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
     app.kubernetes.io/release: {{ .Release.Name }}
