@@ -37,8 +37,22 @@ spec:
       {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
       scrapeTimeout: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
       {{- end }}
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_service_annotation_meta_helm_sh_release_name]
+          separator: ;
+          regex: (.*)
+          replacement: $1
+          targetLabel: cluster_name
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          separator: ;
+          regex: (.*)
+          replacement: $1
+          targetLabel: instance
+          action: replace
+        - action: labeldrop
+          regex: "pod|container|job|service|endpoint"
       {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.relabelings }}
-      relabelings: {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.relabelings "context" $) | nindent 6 }}
+      {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.relabelings "context" $) | nindent 6 }}
       {{- end }}
       {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings }}
       metricRelabelings: {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings "context" $) | nindent 6 }}
