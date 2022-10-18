@@ -10,17 +10,17 @@ metadata:
 spec:
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp-port
+    targetPort: tcp
     protocol: TCP
-    name: tcp-port
+    name: tcp
   - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http-port
+    targetPort: http
     protocol: TCP
-    name: http-port
+    name: http
   - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http-port
+    targetPort: inter-http
     protocol: TCP
-    name: inter-http-port
+    name: inter-http
   {{- if .Values.clickhouse.metrics.enabled }}
   - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
     targetPort: metrics
@@ -45,17 +45,17 @@ spec:
   clusterIP: "None"
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp-port
+    targetPort: tcp
     protocol: TCP
-    name: tcp-port
+    name: tcp
   - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http-port
+    targetPort: http
     protocol: TCP
-    name: http-port
+    name: http
   - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http-port
+    targetPort: inter-http
     protocol: TCP
-    name: inter-http-port
+    name: inter-http
   selector:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
@@ -75,17 +75,17 @@ spec:
   clusterIP: "None"
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp-port
+    targetPort: tcp
     protocol: TCP
-    name: tcp-port
+    name: tcp
   - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http-port
+    targetPort: http
     protocol: TCP
-    name: http-port
+    name: http
   - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http-port
+    targetPort: inter-http
     protocol: TCP
-    name: inter-http-port
+    name: inter-http
   selector:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
     app.kubernetes.io/release: {{ .Release.Name }}
@@ -103,17 +103,17 @@ metadata:
 spec:
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp-port
+    targetPort: tcp
     protocol: TCP
-    name: tcp-port
+    name: tcp
   - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http-port
+    targetPort: http
     protocol: TCP
-    name: http-port
+    name: http
   - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http-port
+    targetPort: inter-http
     protocol: TCP
-    name: inter-http-port
+    name: inter-http
   {{- if .Values.clickhouse.metrics.enabled }}
   - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
     targetPort: metrics
