@@ -38,6 +38,7 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         checksum/configmap-users: {{ include (print $.Template.BasePath "/configmap-users.yaml") . | sha256sum }}
         checksum/configmap-config: {{ include (print $.Template.BasePath "/configmap-config.yaml") . | sha256sum }}
+        checksum/configmap-configs: {{ include (print $.Template.BasePath "/configmap-configs.yaml") . | sha256sum }}
     spec:
     {{- if .Values.clickhouse.affinity }}
       affinity:
@@ -76,11 +77,11 @@ spec:
           {{- end }}
 
           ports:
-            - name: http-port
+            - name: http
               containerPort: {{ .Values.clickhouse.httpPort | default "8123" }}
-            - name: tcp-port
+            - name: tcp
               containerPort: {{ .Values.clickhouse.tcpPort | default "9000" }}
-            - name: inter-http-port
+            - name: inter-http
               containerPort: {{ .Values.clickhouse.interserverHttpPort | default "9009" }}
             {{- if .Values.clickhouse.metrics.enabled }}
             - name: metrics
