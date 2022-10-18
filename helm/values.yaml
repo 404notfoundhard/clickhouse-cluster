@@ -117,7 +117,7 @@ clickhouse:
   livenessProbe:
     httpGet:
       path: /ping
-      port: http-port
+      port: http
     initialDelaySeconds: 5
     periodSeconds: 30
     timeoutSeconds: 5
@@ -125,7 +125,7 @@ clickhouse:
     successThreshold: 1
   readinessProbe:
     tcpSocket:
-      port: tcp-port
+      port: tcp
     initialDelaySeconds: 4
     periodSeconds: 2
     timeoutSeconds: 3
