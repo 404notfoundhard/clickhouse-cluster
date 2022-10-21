@@ -13,7 +13,7 @@ data:
   config.xml: |-
     <?xml version="1.0"?>
     <clickhouse>
-      <include_from>/etc/clickhouse-server/macros.d/macros.xml</include_from>
+      <include_from>/etc/metrika.xml</include_from>
       <macros incl="macros_include" />
       <listen_host>0.0.0.0</listen_host>
       <http_port>{{ .Values.clickhouse.httpPort | default "8123" }}</http_port>

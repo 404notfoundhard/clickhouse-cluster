@@ -78,8 +78,8 @@ clickhouse:
       memory: 4Gi
 
   replicas: 1
-  image: "clickhouse/clickhouse-server"
-  imageVersion: "22.8.1.2097"
+  image: "yandex/clickhouse-server"
+  imageVersion: "20.12.3.3"
   imagePullPolicy: "IfNotPresent"
 
   podManagementPolicy: "Parallel"

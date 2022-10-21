@@ -14,7 +14,7 @@ data:
 {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
   macros.xml: |-
     <?xml version="1.0"?>
-    <clickhouse>
+    <yandex>
       <macros_include>
           {{- if (.Values.clickhouse.config.macros.override) }}
           <{{ .Values.clickhouse.config.macros.override.replicaOverride }} from_env="HOSTNAME" />
@@ -29,7 +29,7 @@ data:
           {{- end }}
           {{- end }}
       </macros_include>
-    </clickhouse>
+    </yandex>
 
   clusters.xml: |-
     <?xml version="1.0"?>
