@@ -64,8 +64,7 @@ spec:
                   - "/bin/sh"
                   - "-c"
                   - var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
-                    mkdir /etc/clickhouse-server/macros.d;
-                    sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/macros.d/macros.xml;
+                    sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/metrika.xml;
           {{- end }}
 
           {{- if .Values.clickhouse.config.remoteServers.enabled }}
