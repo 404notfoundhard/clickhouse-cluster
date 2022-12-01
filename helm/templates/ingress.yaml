@@ -19,13 +19,13 @@ spec:
     - http:
         paths:
           - path: {{ $.Values.clickhouse.baseUrl  }}
-            {{- if $.Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+            {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
             pathType: {{ $.Values.clickhouse.pathType }}
             backend:
               service:
                 name: {{ include "clickhouse.fullname" $ }}
                 port:
-                  name: http-port
+                  name: http
             {{- else }}
             backend:
               serviceName: {{ include "clickhouse.fullname" $ }}
