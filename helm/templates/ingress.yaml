@@ -18,7 +18,7 @@ spec:
     {{- range $host := .Values.clickhouse.ingress.hosts | default (list "") }}
     - http:
         paths:
-          - path: {{ $.Values.clickhouse.baseUrl  }}
+          - path: {{ $.Values.clickhouse.ingress.baseUrl  }}
             {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
             pathType: {{ $.Values.clickhouse.ingress.pathType }}
             backend:
