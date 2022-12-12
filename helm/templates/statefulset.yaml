@@ -4,7 +4,9 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    {{- if gt .Values.clickhouse.replicas 1.0 }}
     app.kubernetes.io/clickhouseRole: "master"
+    {{- end }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
@@ -18,19 +20,27 @@ spec:
     rollingUpdate:
       partition: {{ .Values.clickhouse.rollingUpdatePartition }}
     {{- end }}
+  {{- if gt .Values.clickhouse.replicas 1.0 }}
   serviceName: {{ include "clickhouse.fullname" . }}-headless
+  {{- else }}
+  serviceName: {{ include "clickhouse.fullname" . }}
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "clickhouse.name" . }}
       app.kubernetes.io/release: {{ .Release.Name }}
+      {{- if gt .Values.clickhouse.replicas 1.0 }}
       app.kubernetes.io/clickhouseRole: "Master"
+      {{- end }}
       app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "clickhouse.name" . }}
         app.kubernetes.io/release: {{ .Release.Name }}
+        {{- if gt .Values.clickhouse.replicas 1.0 }}
         app.kubernetes.io/clickhouseRole: "Master"
+        {{- end }}
         app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
@@ -56,7 +66,7 @@ spec:
         - name: {{ include "clickhouse.fullname" . }}
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
           imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
-          {{- if (.Values.clickhouse.config) }}
+          {{- if gt .Values.clickhouse.replicas 1.0 }}
           lifecycle:
             postStart:
               exec:
@@ -104,9 +114,11 @@ spec:
             - name: {{ include "clickhouse.fullname" . }}-logs
               mountPath: {{ include "clickhouse.logpath" . }}
             {{- end }}
+            {{- if gt .Values.clickhouse.replicas 1.0 }}
             - name: clickhouse-macros
               mountPath: /opt/macros.xml
               subPath: macros.xml
+            {{- end }}
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
@@ -138,20 +150,24 @@ spec:
             items:
             - key: users.xml
               path: users.xml
+        {{- if gt .Values.clickhouse.replicas 1.0 }}
         - name: clickhouse-macros
           configMap:
             name: {{ include "clickhouse.fullname" . }}-clusters
             items:
             - key: macros.xml
               path: macros.xml
+        {{- end }}
         - name: clickhouse-configs
           projected:
             sources:
+            {{- if gt .Values.clickhouse.replicas 1.0 }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-clusters
                   items:
                   - key: clusters.xml
                     path: clusters.xml
+              {{- end }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-configs
                   items:

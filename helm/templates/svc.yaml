@@ -32,6 +32,7 @@ spec:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
 
+{{- if gt .Values.clickhouse.replicas 1.0 }}
 ---
 apiVersion: v1
 kind: Service
@@ -124,4 +125,5 @@ spec:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+{{- end }}
 {{- end }}

@@ -1,3 +1,4 @@
+{{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
 {{- if (.Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.enabled) }}
 ---
 apiVersion: monitoring.coreos.com/v1
@@ -64,3 +65,4 @@ spec:
     matchNames:
       - {{ .Release.Namespace }}
 {{- end }}
+{{ end }}
