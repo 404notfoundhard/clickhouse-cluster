@@ -13,8 +13,10 @@ data:
   config.xml: |-
     <?xml version="1.0"?>
     <clickhouse>
+      {{- if gt .Values.clickhouse.replicas 1.0 }}
       <include_from>/etc/metrika.xml</include_from>
       <macros incl="macros_include" />
+      {{- end }}
       <listen_host>0.0.0.0</listen_host>
       <http_port>{{ .Values.clickhouse.httpPort | default "8123" }}</http_port>
       <tcp_port>{{ .Values.clickhouse.tcpPort | default "9000" }}</tcp_port>
