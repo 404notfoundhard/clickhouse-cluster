@@ -21,10 +21,17 @@ data:
       <http_port>{{ .Values.clickhouse.httpPort | default "8123" }}</http_port>
       <tcp_port>{{ .Values.clickhouse.tcpPort | default "9000" }}</tcp_port>
       <interserver_http_port>{{ .Values.clickhouse.interserverHttpPort | default "9009" }}</interserver_http_port>
+      {{- if .Values.clickhouse.config.clickhouseDefaults.display_name }}
+      <display_name>{{ .Values.clickhouse.config.clickhouseDefaults.display_name }}</display_name>
+      {{- else }}
       <display_name>{{ template "clickhouse.fullname" . }}</display_name>
+      {{- end }}
       <users_config>users.xml</users_config>
     {{- range $key, $value := .Values.clickhouse.config.clickhouseDefaults }}
+      {{- if eq $key "display_name" }}
+      {{- else }}
       <{{ $key }}>{{ $value }}</{{ $key }}>
+      {{- end }}
     {{- end }}
 
       <distributed_ddl>
