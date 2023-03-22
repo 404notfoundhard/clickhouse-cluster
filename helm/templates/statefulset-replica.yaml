@@ -72,7 +72,7 @@ spec:
                     {{- end}}
                     {{- if (.Values.tinyDicts) }}
                     {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
-                    ln -s /etc/clickhouse-server/dictionaries/{{ $k }} {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}{{ $k }};
+                    ln -s /etc/clickhouse-server/dictionaries/{{ $k }} {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}{{ $k }} || true;
                     {{- end }}
                     {{- end }}
           {{- end }}
