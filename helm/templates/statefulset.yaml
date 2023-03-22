@@ -119,6 +119,10 @@ spec:
               mountPath: /opt/macros.xml
               subPath: macros.xml
             {{- end }}
+            {{- if (.Values.tinyDicts) }}
+            - name: dictionaries
+              mountPath: {{ .Values.tinyDicts.path }}
+            {{- end }}
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
@@ -157,6 +161,16 @@ spec:
             items:
             - key: macros.xml
               path: macros.xml
+        {{- end }}
+        {{- if (.Values.tinyDicts) }}
+        - name: dictionaries
+          configMap:
+            name: {{ include "clickhouse.fullname" . }}-tinyDicts
+            items:
+          {{- range  $k,$v := .Values.tinyDicts }}
+            - key: {{ $k }}
+              path: {{ $k }}
+          {{- end }}
         {{- end }}
         - name: clickhouse-configs
           projected:

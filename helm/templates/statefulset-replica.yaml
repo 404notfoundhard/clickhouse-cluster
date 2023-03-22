@@ -106,6 +106,10 @@ spec:
             - name: {{ include "clickhouse.fullname" . }}-replica-logs
               mountPath: {{ include "clickhouse.logpath" . }}
             {{- end }}
+            {{- if (.Values.tinyDicts) }}
+            - name: dictionaries
+              mountPath: {{ .Values.tinyDicts.path }}
+            {{- end }}
             - name: clickhouse-macros
               mountPath: /opt/macros.xml
               subPath: macros.xml
@@ -146,6 +150,16 @@ spec:
             items:
             - key: macros.xml
               path: macros.xml
+        {{- if (.Values.tinyDicts) }}
+        - name: dictionaries
+          configMap:
+            name: {{ include "clickhouse.fullname" . }}-tinyDicts
+            items:
+          {{- range  $k,$v := .Values.tinyDicts }}
+            - key: {{ $k }}
+              path: {{ $k }}
+          {{- end }}
+        {{- end }}
         - name: clickhouse-configs
           projected:
             sources:
