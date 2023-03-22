@@ -66,15 +66,23 @@ spec:
         - name: {{ include "clickhouse.fullname" . }}
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
           imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
-          {{- if gt .Values.clickhouse.replicas 1.0 }}
+          {{- if or (gt .Values.clickhouse.replicas 1.0) (.Values.tinyDicts) }}
           lifecycle:
             postStart:
               exec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
+                  - |
+                    {{- if gt .Values.clickhouse.replicas 1.0 }}
+                    var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/metrika.xml;
+                    {{- end}}
+                    {{- if (.Values.tinyDicts) }}
+                    {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
+                    ln -s /etc/clickhouse-server/dictionaries/{{ $k }} {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}{{ $k }};
+                    {{- end }}
+                    {{- end }}
           {{- end }}
 
           {{- if .Values.clickhouse.config.remoteServers.enabled }}
