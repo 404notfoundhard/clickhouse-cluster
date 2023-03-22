@@ -165,7 +165,7 @@ spec:
         {{- if (.Values.tinyDicts) }}
         - name: dictionaries
           configMap:
-            name: {{ include "clickhouse.fullname" . }}-tinyDicts
+            name: {{ include "clickhouse.fullname" . }}-dictionaries
             items:
           {{- range  $k,$v := .Values.tinyDicts }}
             - key: {{ $k }}
