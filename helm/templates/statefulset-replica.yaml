@@ -155,7 +155,7 @@ spec:
           configMap:
             name: {{ include "clickhouse.fullname" . }}-dictionaries
             items:
-          {{- range  $k,$v := .Values.tinyDicts }}
+          {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
             - key: {{ $k }}
               path: {{ $k }}
           {{- end }}
