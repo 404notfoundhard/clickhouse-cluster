@@ -62,6 +62,20 @@ spec:
                     values: ["Master"]
               topologyKey: "kubernetes.io/hostname"
     {{- end }}
+      initContainers:
+        - name: init-clickhouse
+          image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              rm -f {{ .Values.clickhouse.config.clickhouseDefaults.path }}/status
+              {{- if .Values.fixPermission }}
+              chown -R clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
+              {{- end }}
+          volumeMounts:
+            - name: {{ include "clickhouse.fullname" . }}-data
+              mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
       containers:
         - name: {{ include "clickhouse.fullname" . }}
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
