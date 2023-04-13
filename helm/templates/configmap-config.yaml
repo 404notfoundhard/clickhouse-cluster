@@ -14,7 +14,7 @@ data:
     <?xml version="1.0"?>
     <clickhouse>
       {{- if gt .Values.clickhouse.replicas 1.0 }}
-      <include_from>/etc/metrika.xml</include_from>
+      <include_from>/etc/clickhouse-server/spec/metrika.xml</include_from>
       <macros incl="macros_include" />
       {{- end }}
       <listen_host>0.0.0.0</listen_host>

@@ -54,6 +54,23 @@ spec:
                     values: ["Master"]
               topologyKey: "kubernetes.io/hostname"
     {{- end }}
+      initContainers:
+        - name: init-clickhouse
+          image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              chown clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
+              rm -f {{ .Values.clickhouse.config.clickhouseDefaults.path }}/status
+              {{- if .Values.fixPermission }}
+              chown -R clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
+              {{- end }}
+          volumeMounts:
+            - name: {{ include "clickhouse.fullname" . }}-data
+              mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
+          securityContext:
+            runAsUser: 0
       containers:
         - name: {{ include "clickhouse.fullname" . }}-replica
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
@@ -68,7 +85,8 @@ spec:
                   - |
                     {{- if gt .Values.clickhouse.replicas 1.0 }}
                     var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
-                    sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/metrika.xml;
+                    mkdir /etc/clickhouse-server/spec
+                    sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
                     {{- end}}
                     {{- if (.Values.tinyDicts) }}
                     {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
@@ -130,10 +148,10 @@ spec:
               mountPath: /etc/clickhouse-server/config.xml
               subPath: config.xml
 
-          # WTF?
           securityContext:
-            privileged: true
-            runAsUser: 0
+            runAsUser: 101
+            capabilities:
+              add: ["NET_ADMIN", "SYS_NICE", "IPC_LOCK"]
 
     {{- if .Values.clickhouse.nodeSelector }}
       nodeSelector: {{ toYaml .Values.clickhouse.nodeSelector | nindent 8 }}
