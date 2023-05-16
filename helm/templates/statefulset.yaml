@@ -244,7 +244,7 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "clickhouse.fullname" . }}-data
         {{- else }}
-          emptyDir: {}
+          emptyDir:
         {{- end }}
         {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
         - name: {{ include "clickhouse.fullname" . }}-logs
