@@ -64,10 +64,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-      volumes:
-        - name: tmp-conf
-          configMap:
-            name: {{ include "clickhouse-keeper.fullname" . }}
       containers:
       {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
         - name: ch-keeper-exporter
@@ -111,16 +107,10 @@ spec:
           volumeMounts:
           - name: temporaryvolume
             mountPath: /opt
-  volumeClaimTemplates:
-    - metadata:
-        name: temporaryvolume
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        {{- if .Values.clickhouse.config.clickhouseKeeper.specailstorageClassName }}
-        storageClassName: {{ .Values.clickhouse.config.clickhouseKeeper.specailstorageClassName | quote }}
-        {{- end }}
-
-        resources:
-          requests:
-            storage: 10Mi
+      volumes:
+        - name: tmp-conf
+          configMap:
+            name: {{ include "clickhouse-keeper.fullname" . }}
+        - name: temporaryvolume
+          emptydir:
 {{ end }}

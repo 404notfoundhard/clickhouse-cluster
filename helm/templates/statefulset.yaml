@@ -1,16 +1,21 @@
+{{- if and (eq .Values.clickhouse.cluster.enabled false) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+{{- fail "You can't create multiple shard without enabled cluster " }}
+{{- end }}
+
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "clickhouse.fullname" . }}
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
-    {{- if gt .Values.clickhouse.replicas 1.0 }}
+    {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
     app.kubernetes.io/clickhouseRole: "master"
     {{- end }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  replicas: {{ .Values.clickhouse.replicas }}
+  replicas: {{ .Values.clickhouse.cluster.shards }}
   podManagementPolicy: {{ .Values.clickhouse.podManagementPolicy }}
   updateStrategy:
     type: {{ .Values.clickhouse.updateStrategy }}
@@ -20,7 +25,7 @@ spec:
     rollingUpdate:
       partition: {{ .Values.clickhouse.rollingUpdatePartition }}
     {{- end }}
-  {{- if gt .Values.clickhouse.replicas 1.0 }}
+  {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
   serviceName: {{ include "clickhouse.fullname" . }}-headless
   {{- else }}
   serviceName: {{ include "clickhouse.fullname" . }}
@@ -29,7 +34,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ include "clickhouse.name" . }}
       app.kubernetes.io/release: {{ .Release.Name }}
-      {{- if gt .Values.clickhouse.replicas 1.0 }}
+      {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
       app.kubernetes.io/clickhouseRole: "Master"
       {{- end }}
       app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
@@ -38,8 +43,11 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "clickhouse.name" . }}
         app.kubernetes.io/release: {{ .Release.Name }}
-        {{- if gt .Values.clickhouse.replicas 1.0 }}
+        {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
         app.kubernetes.io/clickhouseRole: "Master"
+        {{- if and (.Values.clickhouse.cluster.replication) (.Values.clickhouse.cluster.enabled) }}
+        app.kubernetes.io/clickhouseOption: "replicated"
+        {{- end }}
         {{- end }}
         app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
       annotations:
@@ -83,7 +91,7 @@ spec:
         - name: {{ include "clickhouse.fullname" . }}
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
           imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
-          {{- if or (gt .Values.clickhouse.replicas 1.0) (.Values.tinyDicts) }}
+          {{- if or (gt .Values.clickhouse.cluster.shards 1.0) (.Values.tinyDicts) }}
           lifecycle:
             postStart:
               exec:
@@ -91,7 +99,7 @@ spec:
                   - "/bin/sh"
                   - "-c"
                   - |
-                    {{- if gt .Values.clickhouse.replicas 1.0 }}
+                    {{- if gt .Values.clickhouse.cluster.shards 1.0 }}
                     var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
                     mkdir /etc/clickhouse-server/spec
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
@@ -103,7 +111,7 @@ spec:
                     {{- end }}
           {{- end }}
 
-          {{- if .Values.clickhouse.config.remoteServers.enabled }}
+          {{- if .Values.clickhouse.cluster.enabled }}
           envFrom:
             - secretRef:
                 name: {{ include "clickhouse.fullname" . }}-secret
@@ -140,7 +148,7 @@ spec:
             - name: {{ include "clickhouse.fullname" . }}-logs
               mountPath: {{ include "clickhouse.logpath" . }}
             {{- end }}
-            {{- if gt .Values.clickhouse.replicas 1.0 }}
+            {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
             - name: clickhouse-macros
               mountPath: /opt/macros.xml
               subPath: macros.xml
@@ -180,7 +188,7 @@ spec:
             items:
             - key: users.xml
               path: users.xml
-        {{- if gt .Values.clickhouse.replicas 1.0 }}
+        {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
         - name: clickhouse-macros
           configMap:
             name: {{ include "clickhouse.fullname" . }}-clusters
@@ -201,7 +209,7 @@ spec:
         - name: clickhouse-configs
           projected:
             sources:
-            {{- if gt .Values.clickhouse.replicas 1.0 }}
+            {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-clusters
                   items:
@@ -238,7 +246,6 @@ spec:
                     path: ext-clusters.xml
                 {{- end }}
         {{- end }}
-
         - name: {{ include "clickhouse.fullname" . }}-data
         {{- if .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.enabled }}
           persistentVolumeClaim:

@@ -1,4 +1,4 @@
-{{- if gt .Values.clickhouse.replicas 1.0 }}
+{{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -62,46 +62,40 @@ data:
         </zookeeper>
         {{- end }}
 
-        {{- if .Values.clickhouse.config.remoteServers.enabled }}
+        {{- if .Values.clickhouse.cluster.enabled }}
         <remote_servers>
-          {{- if .Values.clickhouse.config.remoteServers.clusterName }}
-            <{{ .Values.clickhouse.config.remoteServers.clusterName }}>
+          {{- if .Values.clickhouse.cluster.clusterName }}
+            <{{ .Values.clickhouse.cluster.clusterName }}>
           {{- else }}
             <{{ .Release.Name }}>
           {{- end }}
-            {{- range untilStep 0 (int .Values.clickhouse.replicas) 1 }}
+            {{- range untilStep 0 (int .Values.clickhouse.cluster.shards) 1 }}
                 <shard>
-                    <internal_replication>{{ $.Values.clickhouse.config.remoteServers.internalReplication | default "false" }}</internal_replication>
+                    <internal_replication>{{ $.Values.clickhouse.cluster.internalReplication | default "false" }}</internal_replication>
                     <replica>
                         <host>{{ include "clickhouse.fullname" $ }}-{{ . }}.{{ include "clickhouse.fullname" $ }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
                         <port>{{ $.Values.clickhouse.tcpPort}}</port>
-                        <user>{{ $.Values.clickhouse.config.remoteServers.replica.user }}</user>
+                        <user>{{ $.Values.clickhouse.cluster.cluster_user.user }}</user>
                         <password from_env="REPLICATION_PASSWORD" />
-                      {{- if $.Values.clickhouse.config.remoteServers.replica.secure }}
-                        <secure>{{ $.Values.clickhouse.config.remoteServers.replica.secure }}</secure>
-                      {{- end }}
-                      {{- if $.Values.clickhouse.config.remoteServers.replica.compression }}
-                        <compression>{{ $.Values.clickhouse.config.remoteServers.replica.compression }}</compression>
+                      {{- if $.Values.clickhouse.cluster.compression }}
+                        <compression>{{ $.Values.clickhouse.cluster.compression | default "true" }}</compression>
                       {{- end }}
                     </replica>
-                    {{- if $.Values.clickhouse.config.remoteServers.replica.backup.enabled }}
+                    {{- if $.Values.clickhouse.cluster.replication }}
                     <replica>
                         <host>{{ include "clickhouse.fullname" $ }}-replica-{{ . }}.{{ include "clickhouse.fullname" $ }}-replica-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
                         <port>{{ $.Values.clickhouse.tcpPort}}</port>
-                        <user>{{ $.Values.clickhouse.config.remoteServers.replica.user }}</user>
+                        <user>{{ $.Values.clickhouse.cluster.cluster_user.user }}</user>
                         <password from_env="REPLICATION_PASSWORD" />
-                      {{- if $.Values.clickhouse.config.remoteServers.replica.secure }}
-                        <secure>{{ $.Values.clickhouse.config.remoteServers.replica.secure }}</secure>
-                      {{- end }}
-                      {{- if $.Values.clickhouse.config.remoteServers.replica.compression }}
-                        <compression>{{ $.Values.clickhouse.config.remoteServers.replica.compression }}</compression>
+                      {{- if $.Values.clickhouse.cluster.compression }}
+                        <compression>{{ $.Values.clickhouse.cluster.compression | default "true" }}</compression>
                       {{- end }}
                     </replica>
                     {{- end }}
                 </shard>
             {{- end }}
-          {{- if .Values.clickhouse.config.remoteServers.clusterName }}
-            </{{ .Values.clickhouse.config.remoteServers.clusterName }}>
+          {{- if .Values.clickhouse.cluster.clusterName }}
+            </{{ .Values.clickhouse.cluster.clusterName }}>
           {{- else }}
             </{{ .Release.Name }}>
           {{- end }}

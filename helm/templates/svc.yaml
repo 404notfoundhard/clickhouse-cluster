@@ -17,10 +17,6 @@ spec:
     targetPort: http
     protocol: TCP
     name: http
-  - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http
-    protocol: TCP
-    name: inter-http
   {{- if .Values.clickhouse.metrics.enabled }}
   - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
     targetPort: metrics
@@ -28,11 +24,13 @@ spec:
     name: metrics
   {{- end }}
   selector:
-    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
+    {{- if and ( .Values.clickhouse.cluster.enabled ) ( .Values.clickhouse.cluster.replication) }}
+    app.kubernetes.io/clickhouseOption: "replicated"
+    {{- end }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
 
-{{- if gt .Values.clickhouse.replicas 1.0 }}
+{{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
 ---
 apiVersion: v1
 kind: Service
@@ -62,7 +60,7 @@ spec:
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
 
-{{- if .Values.clickhouse.config.remoteServers.replica.backup.enabled }}
+{{- if and ( .Values.clickhouse.cluster.enabled ) ( .Values.clickhouse.cluster.replication) }}
 ---
 apiVersion: v1
 kind: Service
@@ -87,40 +85,6 @@ spec:
     targetPort: inter-http
     protocol: TCP
     name: inter-http
-  selector:
-    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
-    app.kubernetes.io/release: {{ .Release.Name }}
-    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "clickhouse.fullname" . }}-replica
-  labels:
-    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
-    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
-    app.kubernetes.io/release: {{ .Release.Name }}
-spec:
-  ports:
-  - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp
-    protocol: TCP
-    name: tcp
-  - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http
-    protocol: TCP
-    name: http
-  - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http
-    protocol: TCP
-    name: inter-http
-  {{- if .Values.clickhouse.metrics.enabled }}
-  - port: {{ .Values.clickhouse.metrics.port | default "9363" }}
-    targetPort: metrics
-    protocol: TCP
-    name: metrics
-  {{- end }}
   selector:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
     app.kubernetes.io/release: {{ .Release.Name }}

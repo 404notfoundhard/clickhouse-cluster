@@ -71,10 +71,3 @@ if .Values.clickhouse.config.logger.path is empty, default value "/var/log/click
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
-
-{{- define "migration.svc" -}}
-  {{- $repo := regexReplaceAll "https://" .Values.migration.repo "" -}}
-  {{- $proto := "https://" -}}
-  {{- $credentials := printf "%s%s%s" "oauth2:" .Values.migration.repoToken "@" -}}
-  {{- printf "%s%s%s" $proto $credentials $repo -}}
-{{- end -}}
