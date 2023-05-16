@@ -1,4 +1,7 @@
-{{- if .Values.clickhouse.config.remoteServers.replica.backup.enabled }}
+{{- if and (.Values.clickhouse.cluster.replication) (eq .Values.clickhouse.cluster.enabled false) }}
+{{- fail "You can't create 1 shard with replica without enalbed cluster! " }}
+{{- end }}
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -10,7 +13,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  replicas: {{ .Values.clickhouse.replicas }}
+  replicas: {{ .Values.clickhouse.cluster.shards }}
   podManagementPolicy: {{ .Values.clickhouse.podManagementPolicy }}
   updateStrategy:
     type: {{ .Values.clickhouse.updateStrategy }}
@@ -26,6 +29,7 @@ spec:
       app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
       app.kubernetes.io/release: {{ .Release.Name }}
       app.kubernetes.io/clickhouseRole: "replica"
+      app.kubernetes.io/clickhouseOption: "replicated"
       app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
   template:
     metadata:
@@ -33,6 +37,7 @@ spec:
         app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
         app.kubernetes.io/release: {{ .Release.Name }}
         app.kubernetes.io/clickhouseRole: "replica"
+        app.kubernetes.io/clickhouseOption: "replicated"
         app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
@@ -67,7 +72,7 @@ spec:
               chown -R clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
               {{- end }}
           volumeMounts:
-            - name: {{ include "clickhouse.fullname" . }}-data
+            - name: {{ include "clickhouse.fullname" . }}-replica-data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
           securityContext:
             runAsUser: 0
@@ -75,7 +80,7 @@ spec:
         - name: {{ include "clickhouse.fullname" . }}-replica
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
           imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
-          {{- if or (gt .Values.clickhouse.replicas 1.0) (.Values.tinyDicts) }}
+          {{- if or (gt .Values.clickhouse.cluster.shards 1.0) (.Values.tinyDicts) }}
           lifecycle:
             postStart:
               exec:
@@ -83,7 +88,7 @@ spec:
                   - "/bin/sh"
                   - "-c"
                   - |
-                    {{- if gt .Values.clickhouse.replicas 1.0 }}
+                    {{- if gt .Values.clickhouse.cluster.shards 1.0 }}
                     var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
                     mkdir /etc/clickhouse-server/spec
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
@@ -95,7 +100,7 @@ spec:
                     {{- end }}
           {{- end }}
 
-          {{- if .Values.clickhouse.config.remoteServers.enabled }}
+          {{- if .Values.clickhouse.cluster.enabled }}
           envFrom:
             - secretRef:
                 name: {{ include "clickhouse.fullname" . }}-secret
@@ -132,13 +137,13 @@ spec:
             - name: {{ include "clickhouse.fullname" . }}-replica-logs
               mountPath: {{ include "clickhouse.logpath" . }}
             {{- end }}
+            - name: clickhouse-macros
+              mountPath: /opt/macros.xml
+              subPath: macros.xml
             {{- if (.Values.tinyDicts) }}
             - name: dictionaries
               mountPath: {{ .Values.tinyDicts.path }}
             {{- end }}
-            - name: clickhouse-macros
-              mountPath: /opt/macros.xml
-              subPath: macros.xml
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
@@ -229,14 +234,12 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "clickhouse.fullname" . }}-replica-data
         {{- else }}
-          emptyDir: {}
+          emptyDir:
         {{- end }}
-        - name: {{ include "clickhouse.fullname" . }}-replica-logs
         {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
+        - name: {{ include "clickhouse.fullname" . }}-replica-logs
           persistentVolumeClaim:
             claimName: {{ include "clickhouse.fullname" . }}-replica-logs
-        {{- else }}
-          emptyDir: {}
         {{- end }}
   {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
@@ -245,22 +248,22 @@ spec:
         name: {{ include "clickhouse.fullname" . }}-replica-data
         labels:
           app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica-data
-          app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}-replica-data
           app.kubernetes.io/release: {{ .Release.Name }}
+          app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}-replica-data
           app.kubernetes.io/managed-by: {{ .Release.Service }}
       spec:
         accessModes:
-      {{- range .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.accessModes }}
-        - {{ . | quote }}
-      {{- end }}
+        {{- range .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
       {{- if .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storageClassName }}
-        storageClassName: {{ .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storageClassName }}
+        storageClassName: {{ .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storageClassName | quote }}
       {{- end }}
         resources:
           requests:
-            storage: {{ .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storage }}
-  {{- end }}
-  {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
+            storage: {{ .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storage | quote }}
+    {{- end }}
+    {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
     - metadata:
         name: {{ include "clickhouse.fullname" . }}-replica-logs
         labels:
@@ -273,12 +276,13 @@ spec:
       {{- range .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.accessModes }}
         - {{ . | quote }}
       {{- end }}
-      {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName }}
-        storageClassName: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName }}
+      {{- if (eq "-" .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName) }}
+        storageClassName: ""
+      {{- else }}
+        storageClassName: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName | quote }}
       {{- end }}
         resources:
           requests:
-            storage: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storage }}
+            storage: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storage | quote }}
   {{- end }}
-{{- end }}
 {{- end }}

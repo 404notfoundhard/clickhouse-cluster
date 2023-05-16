@@ -47,17 +47,17 @@ data:
             </{{ $key }}>
             {{- end }}
         {{- end }}
-        {{- if .Values.clickhouse.config.remoteServers.enabled }}
-            <{{ .Values.clickhouse.config.remoteServers.replica.user }}>
+        {{- if .Values.clickhouse.cluster.enabled }}
+            <{{ .Values.clickhouse.cluster.cluster_user.user }}>
                 <profile>default</profile>
                 <quota>default</quota>
                 <networks>
-                    {{- range .Values.clickhouse.config.remoteServers.replica.aclNetwork }}
+                    {{- range .Values.clickhouse.cluster.cluster_user.aclNetwork }}
                     <ip>{{ . }}</ip>
                     {{- end }}
                 </networks>
                 <password from_env="REPLICATION_PASSWORD" />
-            </{{ .Values.clickhouse.config.remoteServers.replica.user }}>
+            </{{ .Values.clickhouse.cluster.cluster_user.user }}>
         {{- end }}
         </users>
     {{- if .Values.acl.quotas.enabled }}
