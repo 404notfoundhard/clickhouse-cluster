@@ -15,23 +15,6 @@ additionalClusters: {}
     # replicas:
       # - host3
 
-migration:
-  enabled: false
-  image: "clickhouse/clickhouse-server"
-  imageVersion: "22.8.1.2097"
-  repo: https://gitlab.dev.cems/infra/dbms/clickhouse-schema-queries.git
-  repoToken: GITLAB_TOKEN_PLEZ
-  repoRef: minor/devops-1734
-  migrationUser: "default"
-  migrationPassword: "test"
-  command: |
-     cd clickhouse-schema-queries/CEMS/schema/;
-     ls -1 | xargs -I {} clickhouse-client -h clickhouse-0.clickhouse-headless --user $ENV_USER --password $ENV_PASSWORD --query="CREATE DATABASE IF NOT EXISTS {} ON CLUSTER cems";
-     find . -type f -path '*tables/*' | xargs -I {} cat {} |  clickhouse-client -m -n -h clickhouse-0.clickhouse-headless --user $ENV_USER --password $ENV_PASSWORD
-     find . -type f -path '*distributed/*' | xargs -I {} cat {} |  clickhouse-client -m -n -h clickhouse-0.clickhouse-headless --user $ENV_USER --password $ENV_PASSWORD
-     find . -type f -path '*view/*' | xargs -I {} cat {} |  clickhouse-client -m -n -h clickhouse-0.clickhouse-headless --user $ENV_USER --password $ENV_PASSWORD
-
-
 acl:
   profiles:
     enabled: true
@@ -48,7 +31,7 @@ acl:
   users:
     default:
       # # empty password
-      # password: ""
+      password: ""
       # password_sha256_hex: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
       networks:
       - "0.0.0.0/0"
