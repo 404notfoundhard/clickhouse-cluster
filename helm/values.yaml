@@ -31,7 +31,7 @@ acl:
   users:
     default:
       # # empty password
-      password: ""
+      # password: ""
       # password_sha256_hex: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
       networks:
       - "0.0.0.0/0"
