@@ -1,7 +1,7 @@
 {{- if and (.Values.clickhouse.cluster.replication) (eq .Values.clickhouse.cluster.enabled false) }}
 {{- fail "You can't create 1 shard with replica without enalbed cluster! " }}
 {{- end }}
-
+{{- if .Values.clickhouse.cluster.replication }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -285,4 +285,5 @@ spec:
           requests:
             storage: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storage | quote }}
   {{- end }}
+{{- end }}
 {{- end }}
