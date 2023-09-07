@@ -148,6 +148,10 @@ spec:
             - name: {{ include "clickhouse.fullname" . }}-logs
               mountPath: {{ include "clickhouse.logpath" . }}
             {{- end }}
+            {{- if .Values.clickhouse.persistentVolumeClaim.inMemData.enabled }}
+            - name: clickhouse-in-mem-data
+              mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}/store
+            {{- end }}
             {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
             - name: clickhouse-macros
               mountPath: /opt/macros.xml
@@ -250,8 +254,12 @@ spec:
         {{- if .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.enabled }}
           persistentVolumeClaim:
             claimName: {{ include "clickhouse.fullname" . }}-data
-        {{- else }}
+        {{- end }}
+        {{- if .Values.clickhouse.persistentVolumeClaim.inMemData.enabled }}
+        - name: clickhouse-in-mem-data
           emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.clickhouse.persistentVolumeClaim.inMemData.size }}
         {{- end }}
         {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
         - name: {{ include "clickhouse.fullname" . }}-logs
