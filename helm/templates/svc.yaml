@@ -10,7 +10,9 @@ metadata:
 spec:
   {{- if .Values.clickhouse.externalAccess.loadBalancerIP }}
   loadBalancerIP: {{ .Values.clickhouse.externalAccess.loadBalancerIP }}
+  type: LoadBalancer
   {{- end }}
+  publishNotReadyAddresses: True
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
     targetPort: tcp
@@ -32,7 +34,6 @@ spec:
     {{- end }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
-
 {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
 ---
 apiVersion: v1
