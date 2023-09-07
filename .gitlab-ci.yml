@@ -2,4 +2,4 @@
 include:
   - project: gitlab/ci/ci-cd-templates
     ref: main
-    file: 21_build_helm_chart.yaml
+    file: gitlab-ci.yml
