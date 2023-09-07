@@ -32,7 +32,7 @@ acl:
     default:
       # # empty password
       # password: ""
-      # password_sha256_hex: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+      password_sha256_hex: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
       networks:
       - "0.0.0.0/0"
       profile: "default"
@@ -69,8 +69,8 @@ clickhouse:
     # compression - Use data compression. Default value: true.
 
   cluster:
-    enabled: true
-    shards: 3
+    enabled: false
+    shards: 1
     compression: true
     replication: false # make 2 replica per shard
     internalReplication: true
@@ -138,6 +138,9 @@ clickhouse:
 
   persistentVolumeClaim:
     enabled: true
+    inMemData: ## emptyDir with limits
+      enabled: false
+      size: 10Gi
     dataPersistentVolume:
       enabled: true
       accessModes:
@@ -297,9 +300,9 @@ clickhouse:
       #     port: ""
 
     clickhouseKeeper:
+      enabled: false
       podManagementPolicy: "Parallel"
       updateStrategy: "RollingUpdate"
-      enabled: true
       image: "clickhouse/clickhouse-keeper"
       imageVersion: "22.8.1.2097-alpine"
       externalAccess:
