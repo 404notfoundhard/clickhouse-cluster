@@ -1,5 +1,4 @@
-# ===== INCLUDES
 include:
-  - project: gitlab/ci/ci-cd-templates
+  - project: common/gitlab/ci/ci-cd-templates
     ref: main
-    file: gitlab-ci.yml
+    file: .gitlab/ci/default.yml
