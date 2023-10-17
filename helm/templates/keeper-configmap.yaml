@@ -18,8 +18,8 @@ data:
       <keeper_server>
         <tcp_port>{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default "2181" }}</tcp_port>
         <server_id>__CHANGEME__</server_id>
-        <log_storage_path>/var/lib/clickhouse/log</log_storage_path>
-        <snapshot_storage_path>/var/lib/clickhouse/snapshots</snapshot_storage_path>
+        <log_storage_path>/var/lib/clickhouse_keeper/log</log_storage_path>
+        <snapshot_storage_path>/var/lib/clickhouse_keeper/snapshots</snapshot_storage_path>
 
         <coordination_settings>
           {{- range $key, $value := .Values.clickhouse.config.clickhouseKeeper.coordinationSettings }}
