@@ -65,17 +65,6 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
       containers:
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
-        - name: ch-keeper-exporter
-          image: dabealu/zookeeper-exporter:v0.1.12
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: metrics
-              containerPort: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.port | default 9141 }}
-          command: ['/bin/sh', '-c']
-          args:
-            - /usr/local/bin/zookeeper-exporter --zk-hosts $(echo $HOSTNAME):{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
-      {{- end }}
         - name: clickhouse-keeper
           image: {{ .Values.clickhouse.config.clickhouseKeeper.image }}:{{ .Values.clickhouse.config.clickhouseKeeper.imageVersion }}
           imagePullPolicy: IfNotPresent
@@ -107,10 +96,45 @@ spec:
           volumeMounts:
           - name: temporaryvolume
             mountPath: /opt
+          {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
+          - name: {{ include "clickhouse-keeper.fullname" . }}-data
+            mountPath: /var/lib/clickhouse_keeper
+          {{- end }}
+      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
+        - name: ch-keeper-exporter
+          image: dabealu/zookeeper-exporter:v0.1.12
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.port | default 9141 }}
+          command: ['/bin/sh', '-c']
+          args:
+            - /usr/local/bin/zookeeper-exporter --zk-hosts $(echo $HOSTNAME):{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+      {{- end }}
       volumes:
         - name: tmp-conf
           configMap:
             name: {{ include "clickhouse-keeper.fullname" . }}
         - name: temporaryvolume
           emptydir:
-{{ end }}
+    {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
+    volumeClaimTemplates:
+      - metadata:
+          name: {{ include "clickhouse-keeper.fullname" . }}-data
+          labels:
+            app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+            app.kubernetes.io/component: clickhouse-keeper
+            app.kubernetes.io/release: {{ .Release.Name }}
+        spec:
+          accessModes:
+          {{- range .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.accessModes }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass }}
+          storageClassName: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
+        {{- end }}
+          resources:
+            requests:
+              storage: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
+    {{- end }}
+{{- end }}
