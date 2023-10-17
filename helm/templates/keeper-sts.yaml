@@ -117,24 +117,29 @@ spec:
             name: {{ include "clickhouse-keeper.fullname" . }}
         - name: temporaryvolume
           emptydir:
-    {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
-    volumeClaimTemplates:
-      - metadata:
-          name: {{ include "clickhouse-keeper.fullname" . }}-data
-          labels:
-            app.kubernetes.io/name: {{ .Chart.Name }}-keeper
-            app.kubernetes.io/component: clickhouse-keeper
-            app.kubernetes.io/release: {{ .Release.Name }}
-        spec:
-          accessModes:
-          {{- range .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.accessModes }}
-            - {{ . | quote }}
-          {{- end }}
-        {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass }}
-          storageClassName: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
+        {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
+        - name: {{ include "clickhouse-keeper.fullname" . }}-data
+          persistentVolumeClaim:
+            claimName: {{ include "clickhouse-keeper.fullname" . }}-data
         {{- end }}
-          resources:
-            requests:
-              storage: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
-    {{- end }}
+  {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ include "clickhouse-keeper.fullname" . }}-data
+        labels:
+          app.kubernetes.io/name: {{ .Chart.Name }}-keeper
+          app.kubernetes.io/component: clickhouse-keeper
+          app.kubernetes.io/release: {{ .Release.Name }}
+      spec:
+        accessModes:
+        {{- range .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+      {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass }}
+        storageClassName: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
+      {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
+  {{- end }}
 {{- end }}
