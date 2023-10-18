@@ -9,6 +9,10 @@ metadata:
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
+  {{- if .Values.clickhouse.config.clickhouseKeeper.externalAccess.enabled }}
+  loadBalancerIP: {{ .Values.clickhouse.config.clickhouseKeeper.externalAccess.loadBalancerIP }}
+  type: LoadBalancer
+  {{- end }}
   publishNotReadyAddresses: True
   ports:
   - port: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
