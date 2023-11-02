@@ -207,6 +207,18 @@ clickhouse:
       umask: "022"
       uncompressed_cache_size: "8589934592"
 
+
+    ## Example usage:
+    # kafka:
+    #   enable_ssl_certificate_verification: false
+    #   ssl_endpoint_identification_algorithm: none
+    #   debug: all
+    #   sasl_mechanism: PLAIN
+    #   security_protocol: SASL_PLAINTEXT
+    #   sasl_username: user
+    #   sasl_password: pass
+
+
     logs:
       logger:
         console: 1

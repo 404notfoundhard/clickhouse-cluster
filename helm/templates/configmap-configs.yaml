@@ -67,4 +67,16 @@ data:
         {{- end }}
       </compression>
     </clickhouse>
+
+  {{- if .Values.clickhouse.config.kafka }}
+  kafka.xml: |-
+    <?xml version="1.0"?>
+    <clickhouse>
+      <kafka>
+        {{- range $key, $value := .Values.clickhouse.config.kafka }}
+          <{{ $key }}>{{ $value }}</{{ $key }}>
+        {{- end }}
+      </kafka>
+    </clickhouse>
+  {{- end }}
 {{- end }}

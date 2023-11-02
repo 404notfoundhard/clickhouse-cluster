@@ -242,6 +242,13 @@ spec:
                   - key: metrics.xml
                     path: metrics.xml
                 {{- end }}
+                {{- if .Values.clickhouse.config.kafka }}
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-configs
+                  items:
+                  - key: kafka.xml
+                    path: kafka.xml
+                {{- end }}
                 {{- if (.Values.additionalClusters) }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-ext-clusters
