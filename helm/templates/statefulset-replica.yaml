@@ -100,11 +100,9 @@ spec:
                     {{- end }}
           {{- end }}
 
-          {{- if .Values.clickhouse.cluster.enabled }}
           envFrom:
             - secretRef:
                 name: {{ include "clickhouse.fullname" . }}-secret
-          {{- end }}
 
           ports:
             - name: http

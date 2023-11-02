@@ -74,7 +74,11 @@ data:
     <clickhouse>
       <kafka>
         {{- range $key, $value := .Values.clickhouse.config.kafka }}
+        {{- if eq  $key "sasl_password" }}
+          <sasl_password from_env="SASL_PASSWORD" />
+        {{- else }}
           <{{ $key }}>{{ $value }}</{{ $key }}>
+        {{- end }}
         {{- end }}
       </kafka>
     </clickhouse>
