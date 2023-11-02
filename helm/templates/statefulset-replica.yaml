@@ -214,6 +214,13 @@ spec:
                   items:
                   - key: compression.xml
                     path: compression.xml
+                {{- if .Values.clickhouse.config.kafka }}
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-configs
+                  items:
+                  - key: kafka.xml
+                    path: kafka.xml
+                {{- end }}
                 {{- if .Values.clickhouse.metrics.enabled }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-configs
