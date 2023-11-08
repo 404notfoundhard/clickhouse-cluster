@@ -28,6 +28,8 @@ spec:
         app.kubernetes.io/component: clickhouse-keeper
         app.kubernetes.io/release: {{ .Release.Name }}
     spec:
+      securityContext:
+        fsGroup: 101
     {{- if .Values.clickhouse.config.clickhouseKeeper.nodeSelector }}
       nodeSelector: {{ toYaml .Values.clickhouse.config.clickhouseKeeper.nodeSelector | nindent 8 }}
     {{- end }}

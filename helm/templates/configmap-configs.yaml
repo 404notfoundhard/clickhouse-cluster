@@ -67,7 +67,22 @@ data:
         {{- end }}
       </compression>
     </clickhouse>
-
+  {{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
+  {{- $replicas := int .Values.clickhouse.config.clickhouseKeeper.replicas }}
+  {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
+  zookeeper.xml: |-
+    <?xml version="1.0"?>
+    <clickhouse>
+        <zookeeper>
+            {{- range untilStep 0 $replicas 1 }}
+            <node>
+                <host>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
+                <port>{{ $.Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}</port>
+            </node>
+            {{- end }}
+        </zookeeper>
+    </clickhouse>
+  {{- end }}
   {{- if .Values.clickhouse.config.kafka }}
   kafka.xml: |-
     <?xml version="1.0"?>

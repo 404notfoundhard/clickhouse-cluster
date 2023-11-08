@@ -240,6 +240,13 @@ spec:
                   - key: metrics.xml
                     path: metrics.xml
                 {{- end }}
+                {{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-configs
+                  items:
+                  - key: zookeeper.xml
+                    path: zookeeper.xml
+                {{- end }}
                 {{- if .Values.clickhouse.config.kafka }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-configs
