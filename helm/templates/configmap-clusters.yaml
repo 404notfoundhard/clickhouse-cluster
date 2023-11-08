@@ -10,8 +10,6 @@ metadata:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-{{- $replicas := int .Values.clickhouse.config.clickhouseKeeper.replicas }}
-{{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
   macros.xml: |-
     <?xml version="1.0"?>
     <yandex>
@@ -48,17 +46,6 @@ data:
             <operation_timeout_ms>{{ .Values.clickhouse.config.zookeeperServers.operation_timeout_ms }}</operation_timeout_ms>
             <root>{{ .Values.clickhouse.config.zookeeperServers.root }}</root>
             <identity>{{ .Values.clickhouse.config.zookeeperServers.identity }}</identity>
-        </zookeeper>
-        {{- end }}
-
-        {{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
-        <zookeeper>
-            {{- range untilStep 0 $replicas 1 }}
-            <node>
-                <host>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
-                <port>{{ $.Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}</port>
-            </node>
-            {{- end }}
         </zookeeper>
         {{- end }}
 
