@@ -12,7 +12,7 @@ spec:
   loadBalancerIP: {{ .Values.clickhouse.externalAccess.loadBalancerIP }}
   type: LoadBalancer
   {{- end }}
-  publishNotReadyAddresses: True
+  publishNotReadyAddresses: False
   ports:
   - port: {{ .Values.clickhouse.tcpPort }}
     targetPort: tcp
