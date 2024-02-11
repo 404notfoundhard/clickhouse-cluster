@@ -41,7 +41,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   clusterIP: "None"
-  publishNotReadyAddresses: False
+  publishNotReadyAddresses: True
   ports:
   - port: {{ .Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}
     targetPort: tcp-raft
