@@ -85,7 +85,7 @@ spec:
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ['/bin/bash', '-c', 'echo ruok | nc 127.1 {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep imok']
+              command: ['/bin/bash', '-c', 'echo stat | nc 127.1 {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep Received']
             initialDelaySeconds: 40
             periodSeconds: 5
           command: ["clickhouse-keeper", "--config", "/opt/keeper_config.xml"]
@@ -98,7 +98,7 @@ spec:
           volumeMounts:
           - name: temporaryvolume
             mountPath: /opt
-          {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
+          {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
           - name: {{ include "clickhouse-keeper.fullname" . }}-data
             mountPath: /var/lib/clickhouse_keeper
           {{- end }}
