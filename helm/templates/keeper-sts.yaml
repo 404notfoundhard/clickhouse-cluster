@@ -101,6 +101,9 @@ spec:
           {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
           - name: {{ include "clickhouse-keeper.fullname" . }}-data
             mountPath: /var/lib/clickhouse_keeper
+          {{- else }}
+          - name: keeper-data
+            mountPath: /var/lib/clickhouse_keeper
           {{- end }}
       {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
         - name: ch-keeper-exporter
@@ -123,6 +126,9 @@ spec:
         - name: {{ include "clickhouse-keeper.fullname" . }}-data
           persistentVolumeClaim:
             claimName: {{ include "clickhouse-keeper.fullname" . }}-data
+        {{- else }}
+        - name: keeper-data
+          emptydir:
         {{- end }}
   {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
