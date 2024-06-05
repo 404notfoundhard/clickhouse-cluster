@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
   {{- if .Values.clickhouse.externalAccess }}
-  {{- if eq "loadbalancer" (.Values.clickhouse.externalAccess.type | lower)  }}
+  {{- if and (eq "loadbalancer" (.Values.clickhouse.externalAccess.type | lower)) (.Values.clickhouse.externalAccess.LoadBalancer.annotations) }}
   annotations:
   {{- toYaml .Values.clickhouse.externalAccess.LoadBalancer.annotations | nindent 4 }}
   {{- end }}
