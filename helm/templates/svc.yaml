@@ -7,10 +7,20 @@ metadata:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
+  {{- if .Values.clickhouse.externalAccess }}
+  {{- if eq "loadbalancer" (.Values.clickhouse.externalAccess.type | lower)  }}
+  annotations:
+  {{- toYaml .Values.clickhouse.externalAccess.LoadBalancer.annotations | nindent 4 }}
+  {{- end }}
+  {{- end }}
 spec:
-  {{- if .Values.clickhouse.externalAccess.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.clickhouse.externalAccess.loadBalancerIP }}
+  {{- if .Values.clickhouse.externalAccess }}
+  {{- if eq "loadbalancer" (.Values.clickhouse.externalAccess.type | lower)  }}
   type: LoadBalancer
+  {{- end }}
+  {{- if .Values.clickhouse.externalAccess.LoadBalancer.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.clickhouse.externalAccess.LoadBalancer.loadBalancerIP }}
+  {{- end }}
   {{- end }}
   publishNotReadyAddresses: False
   ports:

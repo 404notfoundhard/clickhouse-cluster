@@ -114,9 +114,19 @@ clickhouse:
   tcpPort: "9000"
   interserverHttpPort: "9009"
 
-  externalAccess:
-    enabled: false
-    # loadBalancerIP: 10.10.10.10
+  # externalAccess:
+  #   type: LoadBalancer
+  #   LoadBalancer:
+  #     annotations:
+  #       io.cilium/lb-ipam-ips: 172.16.60.81
+  #       io.cilium/lb-ipam-sharing-cross-namespace: '*'
+  #       io.cilium/lb-ipam-sharing-key: "ch-kafka"
+      # loadBalancerIP: 10.10.10.10 ## lbIP will be deprecated in k8s 1.24
+  ## OR (TODO)
+  # type: NodePort
+  # nodePort:
+  #   tcp: 9909
+  #   http: 8125
 
   livenessProbe:
     httpGet:
