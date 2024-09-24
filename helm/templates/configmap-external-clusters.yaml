@@ -10,29 +10,27 @@ metadata:
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-{{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
-{{- $replicationPort := .Values.clickhouse.tcpPort }}
   ext-clusters.xml: |-
     <?xml version="1.0"?>
     <clickhouse>
         <remote_servers>
         {{- range $cluster, $configs :=  .Values.additionalClusters }}
             <{{ $cluster }}>
-                {{- range $key, $values := $configs }}
+            {{- range $shard := $configs.shards }}
                 <shard>
-                    <internal_replication>{{ $values.internalReplication }}</internal_replication>
-                    {{- range $values.replicas }}
+                    <internal_replication>{{ $configs.internalReplication | default "true" }}</internal_replication>
+                    {{- range  $shard.replicas }}
                     <replica>
-                        <host>{{ . }}</host>
-                        <port>{{ $replicationPort | default 9000 }}</port>
-                        {{- if $.Values.additionalClustersCredentials }}
-                        <user>{{ $.Values.additionalClustersCredentials.user }}</user>
-                        <password from_env="EXT_REPLICATION_PASSWORD"/>
+                        <host>{{ .host }}</host>
+                        <port>{{ .port | default 9000 }}</port>
+                        {{- if $configs.credentials }}
+                        <user>{{ $configs.credentials.user | default }}</user>
+                        <password from_env="INTERNAL_CONNECT_PASSWORD_{{ $cluster }}"/>
                         {{- end }}
                     </replica>
                     {{- end }}
                 </shard>
-                {{- end }}
+            {{- end }}
             </{{ $cluster }}>
         {{- end }}
         </remote_servers>
