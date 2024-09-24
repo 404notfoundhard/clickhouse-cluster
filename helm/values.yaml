@@ -1,19 +1,27 @@
 clusterDomain: "svc.k8s"
 
-## This credentials are substituted into every shard of all additionalClusters
-# additionalClustersCredentials:
-#   user: replica_tech
-#   password: some_password
-
 additionalClusters: {}
-  # clust_repl:
-  # - internalReplication: false
-    # replicas:
-      # - host1
-      # - host2
-  # - internalReplication: false
-    # replicas:
-      # - host3
+  # test_bi:
+  #   internalReplication: "true"
+  #   credentials:
+  #     user: interconnect_user       ## not required
+  #     password: interconnect_pass
+  #   shards:
+  #     - replicas:
+  #         - host: shard1_replica1
+  #         - host: shard1_replica2
+  #     - replicas:
+  #         - host: shard2_replica1
+  #           port: 9000              ## VALUE BY DEFAULT - 9000
+  #         - host: shard2_replica2
+  #           port: 9000
+  # test_cluster:
+  #   internalReplication: "false"
+  #   shards:
+  #     - replicas:
+  #         - host: shrd1_repl1
+  #         - host: shrd1_repl2
+
 
 acl:
   profiles:
