@@ -27,6 +27,8 @@ spec:
         app.kubernetes.io/name: {{ .Chart.Name }}-keeper # has to match .spec.selector.matchLabels
         app.kubernetes.io/component: clickhouse-keeper
         app.kubernetes.io/release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/keeper-configmap.yaml") . | sha256sum }}
     spec:
       securityContext:
         fsGroup: 101

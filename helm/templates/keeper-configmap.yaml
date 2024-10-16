@@ -13,6 +13,11 @@ data:
 {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
   keeper_config.xml: |-
     <yandex>
+      <logger>
+          <level>{{ .Values.clickhouse.config.clickhouseKeeper.logLevel }}</level>
+          <console>1</console>
+      </logger>
+
       <max_connections>{{ .Values.clickhouse.config.clickhouseKeeper.max_connections | default 4096 }}</max_connections>
       <listen_host>0.0.0.0</listen_host>
       <keeper_server>
@@ -31,7 +36,7 @@ data:
         {{- range untilStep 0 $replicas 1 }}
             <server>
                 <id>{{ add . 1 }}</id>
-                <hostname>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</hostname>
+                <hostname>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}</hostname>
                 <port>{{ $.Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}</port>
             </server>
         {{- end }}
