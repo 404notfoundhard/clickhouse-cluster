@@ -354,6 +354,7 @@ clickhouse:
         limits:
           cpu: 0.5
           memory: 600Mi
+      logLevel: information # none (turns off logging), fatal, critical, error, warning, notice, information, debug, trace,
       coordinationSettings:
         auto_forwarding: "true"
         dead_session_check_period_ms: "500"
