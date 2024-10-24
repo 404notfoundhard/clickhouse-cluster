@@ -24,7 +24,7 @@ data:
                         <host>{{ .host }}</host>
                         <port>{{ .port | default 9000 }}</port>
                         {{- if $configs.credentials }}
-                        <user>{{ $configs.credentials.user | default }}</user>
+                        <user>{{ $configs.credentials.user | default "default" }}</user>
                         <password from_env="INTERNAL_CONNECT_PASSWORD_{{ $cluster }}"/>
                         {{- end }}
                     </replica>
