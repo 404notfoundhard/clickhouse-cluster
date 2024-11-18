@@ -116,7 +116,9 @@ clickhouse:
       honorLabels:
 
   # affinity:
+  #   NodeAffinityCustom: {}
   #   preset: "required"
+
 
   httpPort: "8123"
   tcpPort: "9000"

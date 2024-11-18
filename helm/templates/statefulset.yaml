@@ -70,6 +70,9 @@ spec:
                     operator: In
                     values: ["Master"]
               topologyKey: "kubernetes.io/hostname"
+        {{- if .Values.clickhouse.affinity.NodeAffinityCustom }}
+        nodeAffinity: {{ toYaml .Values.clickhouse.affinity.NodeAffinityCustom | nindent 10 }}
+        {{- end }}
     {{- end }}
       initContainers:
         - name: init-clickhouse
