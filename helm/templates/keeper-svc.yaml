@@ -1,4 +1,4 @@
-{{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
+{{- if .Values.clickhouseKeeper.enabled }}
 ---
 apiVersion: v1
 kind: Service
@@ -9,18 +9,18 @@ metadata:
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  {{- if .Values.clickhouse.config.clickhouseKeeper.externalAccess.enabled }}
-  loadBalancerIP: {{ .Values.clickhouse.config.clickhouseKeeper.externalAccess.loadBalancerIP }}
+  {{- if .Values.clickhouseKeeper.externalAccess.enabled }}
+  loadBalancerIP: {{ .Values.clickhouseKeeper.externalAccess.loadBalancerIP }}
   type: LoadBalancer
   {{- end }}
   publishNotReadyAddresses: False
   ports:
-  - port: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+  - port: {{ .Values.clickhouseKeeper.tcpPort | default 2181 }}
     targetPort: tcp-connect
     protocol: TCP
     name: tcp-connect
-  {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
-  - port: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.port | default 9141 }}
+  {{- if .Values.clickhouseKeeper.metrics.enabled }}
+  - port: {{ .Values.clickhouseKeeper.metrics.port | default 9141 }}
     targetPort: metrics
     protocol: TCP
     name: metrics
@@ -43,11 +43,11 @@ spec:
   clusterIP: "None"
   publishNotReadyAddresses: True
   ports:
-  - port: {{ .Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}
+  - port: {{ .Values.clickhouseKeeper.raftPort | default 9444 }}
     targetPort: tcp-raft
     protocol: TCP
     name: tcp-raft
-  - port: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+  - port: {{ .Values.clickhouseKeeper.tcpPort | default 2181 }}
     targetPort: tcp-connect
     protocol: TCP
     name: tcp-connect

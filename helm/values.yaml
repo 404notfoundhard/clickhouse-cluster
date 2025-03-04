@@ -1,4 +1,4 @@
-clusterDomain: "svc.k8s"
+clusterDomain: "svc"
 
 additionalClusters: {}
   # test_bi:
@@ -58,6 +58,74 @@ acl:
           read_rows: 0
           execution_time: 0
 
+clickhouseKeeper:
+  enabled: false
+  podManagementPolicy: "Parallel"
+  updateStrategy: "RollingUpdate"
+  image: "clickhouse/clickhouse-keeper"
+  imageVersion: "22.8.1.2097-alpine"
+  externalAccess:
+    enabled: false
+    # loadBalancerIP: 10.10.10.10
+  replicas: 1 # must be 1,3,5,7, etc for quorum
+  tcpPort: 2181 # default value
+  raftPort: 9444 # default value
+  persistentVolumeClaim:
+    enabled: false
+    accessModes:
+      - "ReadWriteOnce"
+    storageClass: local-path
+    capacity: 2Gi
+  resources:
+    requests:
+      cpu: 0.2
+      memory: 200Mi
+    limits:
+      cpu: 0.5
+      memory: 600Mi
+  logLevel: information # none (turns off logging), fatal, critical, error, warning, notice, information, debug, trace,
+  coordinationSettings:
+    auto_forwarding: "true"
+    dead_session_check_period_ms: "500"
+    election_timeout_lower_bound_ms: "1000"
+    election_timeout_upper_bound_ms: "2000"
+    force_sync: "true"
+    fresh_log_gap: "200"
+    heart_beat_interval_ms: "500"
+    max_requests_batch_size: "100"
+    min_session_timeout_ms: "10000"
+    operation_timeout_ms: "10000"
+    quorum_reads: "false"
+    raft_logs_level: "information"
+    reserved_log_items: "100000"
+    rotate_log_storage_interval: "100000"
+    session_timeout_ms: "30000"
+    shutdown_timeout: "5000"
+    snapshot_distance: "100000"
+    snapshots_to_keep: "3"
+    stale_log_gap: "10000"
+    startup_timeout: "30000"
+  customLabels: {}
+  podAntiAffinity:
+    enable: false
+  metrics:
+    enabled: false
+    port: 9141
+    endpoint: /metrics
+    serviceMonitor:
+      enabled: false
+      additionalLabels: {}
+      prometheusSelector:
+        service-monitor: "true"
+      selector:
+      namespace:
+      interval:
+      scrapeTimeout:
+      relabelings:
+      metricRelabelings:
+      honorLabels:
+
+
 
 clickhouse:
   resources:
@@ -76,13 +144,26 @@ clickhouse:
     # password – The password for connecting to a remote server (not masked).
     # compression - Use data compression. Default value: true.
 
+# tinyDicts:
+#   application.csv: |
+#       21,"FTP"
+#       22,"SSH"
+#       23,"TELNET"
+#       25,"SMTP"
+#       26,"RSFTP"
+#       38,"RAP"
+
+
   cluster:
     enabled: false
     shards: 1
+    replicas: 1
+    keeperOptions:
+      # session_timeout_ms: 30000     # example
+      # operation_timeout_ms: 10000   # example
     compression: true
-    replication: false # make 2 replica per shard
     internalReplication: true
-    # clusterName: name # by default - {{ Release.Name }}
+    clusterName: "test"
     cluster_user:
       user: replica_tech
       password: hide_you_aswesome_password
@@ -90,7 +171,7 @@ clickhouse:
         - "0.0.0.0/0"
 
   image: "clickhouse/clickhouse-server"
-  imageVersion: "22.8.15.23"
+  imageVersion: "24.8.14.39"
   imagePullPolicy: "IfNotPresent"
 
   podManagementPolicy: "Parallel"
@@ -170,18 +251,18 @@ clickhouse:
     logsPersistentVolume:
       enabled: false
 
-
-  ingress:
-    enabled: false
-    # annotations: {}
-    # baseUrl: /
-    # hosts:
-    #   - clickhouse.domain.corp
-    # pathSuffix:
-    # pathType: Prefix
-    # tls:
-    #   - hosts:
-    #     - clickhouse.domain.corp
+  # TODO:
+  # ingress:
+  #   enabled: false
+  #   # annotations: {}
+  #   # baseUrl: /
+  #   # hosts:
+  #   #   - clickhouse.domain.corp
+  #   # pathSuffix:
+  #   # pathType: Prefix
+  #   # tls:
+  #   #   - hosts:
+  #   #     - clickhouse.domain.corp
 
   config:
     clickhouseDefaults:
@@ -223,7 +304,6 @@ clickhouse:
       timezone: UTC
       total_memory_profiler_step: "4194304"
       total_memory_tracker_sample_probability: "0"
-      ttl_only_drop_parts: "1"
       umask: "022"
       uncompressed_cache_size: "8589934592"
 
@@ -242,68 +322,67 @@ clickhouse:
     logs:
       logger:
         console: 1
+        log: /tmp/useless
+        errorlog: /tmp/uselesserr
 
-      query_log:
-        database: system
-        table: query_log
-        partition_by: toYYYYMMDD(event_date)
-        ttl: event_date + INTERVAL 30 DAY DELETE
-        flush_interval_milliseconds: "7500"
+      # query_log:
+      #   database: system
+      #   table: query_log
+      #   partition_by: toYYYYMMDD(event_date)
+      #   ttl: event_date + INTERVAL 30 DAY DELETE
+      #   flush_interval_milliseconds: "7500"
 
-      part_log:
-        database: system
-        table: part_log
-        partition_by: toYYYYMMDD(event_date)
-        ttl: event_date + INTERVAL 30 DAY DELETE
-        flush_interval_milliseconds: "7500"
+      # part_log:
+      #   database: system
+      #   table: part_log
+      #   partition_by: toYYYYMMDD(event_date)
+      #   ttl: event_date + INTERVAL 30 DAY DELETE
+      #   flush_interval_milliseconds: "7500"
 
-      metric_log:
-        database: system
-        table: metric_log
-        flush_interval_milliseconds: "7500"
-        collect_interval_milliseconds: "1000"
+      # metric_log:
+      #   database: system
+      #   table: metric_log
+      #   flush_interval_milliseconds: "7500"
+      #   collect_interval_milliseconds: "1000"
 
-      query_thread_log:
-        database: system
-        table: query_thread_log
-        partition_by: toYYYYMMDD(event_date)
-        ttl: event_date + INTERVAL 30 DAY DELETE
-        flush_interval_milliseconds: "7500"
+      # query_thread_log:
+      #   database: system
+      #   table: query_thread_log
+      #   partition_by: toYYYYMMDD(event_date)
+      #   ttl: event_date + INTERVAL 30 DAY DELETE
+      #   flush_interval_milliseconds: "7500"
 
-      asynchronous_metric_log:
-        database: system
-        partition_by: toYYYYMMDD(event_date)
-        flush_interval_milliseconds: "7000"
+      # asynchronous_metric_log:
+      #   database: system
+      #   partition_by: toYYYYMMDD(event_date)
+      #   flush_interval_milliseconds: "7000"
 
-      zookeeper_log:
-        database: system
-        partition_by: toYYYYMMDD(event_date)
-        flush_interval_milliseconds: "7000"
+      # zookeeper_log:
+      #   database: system
+      #   partition_by: toYYYYMMDD(event_date)
+      #   flush_interval_milliseconds: "7000"
 
-      trace_log:
-        database: system
-        table: trace_log
-        partition_by: toYYYYMMDD(event_date)
-        ttl: event_date + INTERVAL 30 DAY DELETE
-        flush_interval_milliseconds: "7500"
+      # trace_log:
+      #   database: system
+      #   table: trace_log
+      #   partition_by: toYYYYMMDD(event_date)
+      #   ttl: event_date + INTERVAL 30 DAY DELETE
+      #   flush_interval_milliseconds: "7500"
 
-      crash_log:
-        database: system
-        table: crash_log
-        partition_by: toYYYYMMDD(event_date)
-        ttl: event_date + INTERVAL 30 DAY DELETE
-        flush_interval_milliseconds: "1000"
+      # crash_log:
+      #   database: system
+      #   table: crash_log
+      #   partition_by: toYYYYMMDD(event_date)
+      #   ttl: event_date + INTERVAL 30 DAY DELETE
+      #   flush_interval_milliseconds: "1000"
 
-      send_crash_reports:
-        enabled: false
-        anonymize: false
-        endpoint: https://6f33034cfe684dd7a3ab9875e57b1c8d@o388870.ingest.sentry.io/5226277
+      # send_crash_reports:
+      #   enabled: false
+      #   anonymize: false
+      #   endpoint: https://6f33034cfe684dd7a3ab9875e57b1c8d@o388870.ingest.sentry.io/5226277
 
   ## Useless remove in next release
     macros: {}
-      # override:
-      #   replicaOverride: replica
-      #   shardOverride: shard_repl
       # custom:
       #   cluster: clickhouse
       #   cluster_repl: clickhouse_repl
@@ -322,81 +401,15 @@ clickhouse:
     # root — The znode that is used as the root for znodes used by the ClickHouse server. Optional.
     # identity — User and password, that can be required by ZooKeeper to give access to requested znodes. Optional.
 
-    zookeeperServers:
+    externalZookeper:
       enabled: false
-      # session_timeout_ms: "30000"
-      # operation_timeout_ms: "10000"
+      options:
+      #   session_timeout_ms: "30000"
+      #   operation_timeout_ms: "10000"
       # config:
       #   - index: ""
       #     host: ""
       #     port: ""
-
-    clickhouseKeeper:
-      enabled: false
-      podManagementPolicy: "Parallel"
-      updateStrategy: "RollingUpdate"
-      image: "clickhouse/clickhouse-keeper"
-      imageVersion: "22.8.1.2097-alpine"
-      externalAccess:
-        enabled: false
-        # loadBalancerIP: 10.10.10.10
-      replicas: 1 # must be 1,3,5,7, etc for quorum
-      tcpPort: 2181 # default value
-      raftPort: 9444 # default value
-      persistentVolumeClaim:
-        enabled: false
-        accessModes:
-          - "ReadWriteOnce"
-        storageClass: local-path
-        capacity: 2Gi
-      resources:
-        requests:
-          cpu: 0.2
-          memory: 200Mi
-        limits:
-          cpu: 0.5
-          memory: 600Mi
-      logLevel: information # none (turns off logging), fatal, critical, error, warning, notice, information, debug, trace,
-      coordinationSettings:
-        auto_forwarding: "true"
-        dead_session_check_period_ms: "500"
-        election_timeout_lower_bound_ms: "1000"
-        election_timeout_upper_bound_ms: "2000"
-        force_sync: "true"
-        fresh_log_gap: "200"
-        heart_beat_interval_ms: "500"
-        max_requests_batch_size: "100"
-        min_session_timeout_ms: "10000"
-        operation_timeout_ms: "10000"
-        quorum_reads: "false"
-        raft_logs_level: "information"
-        reserved_log_items: "100000"
-        rotate_log_storage_interval: "100000"
-        session_timeout_ms: "30000"
-        shutdown_timeout: "5000"
-        snapshot_distance: "100000"
-        snapshots_to_keep: "3"
-        stale_log_gap: "10000"
-        startup_timeout: "30000"
-      customLabels: {}
-      podAntiAffinity:
-        enable: false
-      metrics:
-        enabled: false
-        port: 9141
-        endpoint: /metrics
-        serviceMonitor:
-          enabled: false
-          additionalLabels: {}
-          prometheusSelector:
-            service-monitor: "true"
-          selector:
-          namespace:
-          interval:
-          scrapeTimeout:
-          relabelings:
-          metricRelabelings:
-          honorLabels:
 
     distributed_ddl:
       path: /clickhouse/task_queue/ddl

@@ -1,0 +1,103 @@
+
+{{- if and ( .Values.clickhouse.cluster.enabled ) }}
+{{- if and (not .Values.clickhouseKeeper.enabled) (not .Values.clickhouse.config.externalZookeper.enabled) }}
+{{- fail `
+ERROR: You are trying to install a cluster, but the internal and external keepers are disabled.
+These settings are incorrect:
+.Values.clickhouseKeeper.enabled = false
+Values.clickhouse.config.externalZookeper.enabled = false
+Please set up one of these parameters.` }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-cluster-conf
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-cluster-conf
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  macros.xml: |-
+    <?xml version="1.0"?>
+    <clickhouse>
+      <macros_include>
+          <replica from_env="HOSTNAME" />
+          <shard>SHARD</shard>
+          {{- if (.Values.clickhouse.config.macros.custom) }}
+          {{- range $k,$v := .Values.clickhouse.config.macros.custom }}
+          <{{ $k }}>{{ $v }}</{{ $k }}>
+          {{- end }}
+          {{- end }}
+      </macros_include>
+    </clickhouse>
+{{- if .Values.clickhouseKeeper.enabled }}
+{{- $replicas := int .Values.clickhouseKeeper.replicas }}
+{{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
+  keeper.xml: |-
+      <?xml version="1.0"?>
+      <clickhouse>
+          <zookeeper>
+              {{- range untilStep 0 $replicas 1 }}
+              <node>
+                  <host>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
+                  <port>{{ $.Values.clickhouseKeeper.tcpPort | default 2181 }}</port>
+              </node>
+              {{- range $k, $v := $.Values.clickhouse.cluster.keeperOptions }}
+              <{{ $k }}>{{ $v }}</{{ $k }}>
+              {{- end }}
+              {{- end }}
+          </zookeeper>
+      </clickhouse>
+{{- else if .Values.clickhouse.config.externalZookeper.enabled }}
+  keeper.xml: |-
+      <?xml version="1.0"?>
+      <clickhouse>
+          <zookeeper>
+              {{- range .Values.clickhouse.config.externalZookeper.config }}
+              <node>
+                  <host>{{ .host }}</host>
+                  <port>{{ .port | default 2181 }}</port>
+              </node>
+              {{- end }}
+              {{- range $k, $v := $.Values.clickhouse.config.externalZookeper.options }}
+              <{{ $k }}>{{ $v }}</{{ $k }}>
+              {{- end }}
+          </zookeeper>
+      </clickhouse>
+{{- end }}
+
+  cluster.xml: |-
+    <?xml version="1.0"?>
+    <clickhouse>
+        <remote_servers>
+          {{- if .Values.clickhouse.cluster.clusterName }}
+            <{{ .Values.clickhouse.cluster.clusterName }}>
+          {{- else }}
+            <{{ .Release.Name }}>
+          {{- end }}
+            {{- range $shard := untilStep 0 (int .Values.clickhouse.cluster.shards) 1 }}
+                <shard>
+                    <internal_replication>{{ $.Values.clickhouse.cluster.internalReplication | default "true" }}</internal_replication>
+                  {{- range $replica := untilStep 0 (int $.Values.clickhouse.cluster.replicas) 1 }}
+                    <replica>
+                        <host>{{ include "clickhouse.fullname" $ }}-{{ $shard }}-{{ $replica }}.{{ include "clickhouse.fullname" $ }}-headless.{{ $.Release.Namespace }}.{{ $.Values.clusterDomain }}</host>
+                        <port>{{ $.Values.clickhouse.tcpPort}}</port>
+                        <user>{{ $.Values.clickhouse.cluster.cluster_user.user }}</user>
+                        <password from_env="REPLICATION_PASSWORD" />
+                      {{- if $.Values.clickhouse.cluster.compression }}
+                        <compression>{{ $.Values.clickhouse.cluster.compression | default "true" }}</compression>
+                      {{- end }}
+                    </replica>
+                  {{- end }}
+                </shard>
+            {{- end }}
+          {{- if .Values.clickhouse.cluster.clusterName }}
+            </{{ .Values.clickhouse.cluster.clusterName }}>
+          {{- else }}
+            </{{ .Release.Name }}>
+          {{- end }}
+        </remote_servers>
+    </clickhouse>
+{{- end }}

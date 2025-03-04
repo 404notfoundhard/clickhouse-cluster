@@ -1,74 +1,69 @@
-{{- if and (eq .Values.clickhouse.cluster.enabled false) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
-{{- fail "You can't create multiple shard without enabled cluster " }}
+{{- $outer := . -}}
+{{- $shards := 1 }}
+{{- if $.Values.clickhouse.cluster.enabled }}
+{{- $shards = (.Values.clickhouse.cluster.shards|int)}}
 {{- end }}
-
+{{- range $shard := until $shards }}
 ---
+{{- with  $outer }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "clickhouse.fullname" . }}
+  name: "{{ include "clickhouse.fullname" . }}-{{ $shard }}"
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
-    {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
-    app.kubernetes.io/clickhouseRole: "master"
-    {{- end }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  replicas: {{ .Values.clickhouse.cluster.shards }}
-  podManagementPolicy: {{ .Values.clickhouse.podManagementPolicy }}
+{{- if $.Values.clickhouse.cluster.enabled }}
+  replicas: {{ $.Values.clickhouse.cluster.replicas }}
+{{- else }}
+  replicas: 1
+{{- end }}
+  podManagementPolicy: {{ $.Values.clickhouse.podManagementPolicy }}
   updateStrategy:
-    type: {{ .Values.clickhouse.updateStrategy }}
-    {{- if (eq "Recreate" .Values.clickhouse.updateStrategy) }}
+    type: {{ $.Values.clickhouse.updateStrategy }}
+    {{- if (eq "Recreate" $.Values.clickhouse.updateStrategy) }}
     rollingUpdate: null
-    {{- else if .Values.clickhouse.rollingUpdatePartition }}
+    {{- else if $.Values.clickhouse.rollingUpdatePartition }}
     rollingUpdate:
-      partition: {{ .Values.clickhouse.rollingUpdatePartition }}
+      partition: {{ $.Values.clickhouse.rollingUpdatePartition }}
     {{- end }}
-  {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
-  serviceName: {{ include "clickhouse.fullname" . }}-headless
+  {{- if $.Values.clickhouse.cluster.enabled }}
+  serviceName: clickhouse-headless
   {{- else }}
-  serviceName: {{ include "clickhouse.fullname" . }}
+  serviceName: clickhouse
   {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "clickhouse.name" . }}
       app.kubernetes.io/release: {{ .Release.Name }}
-      {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
-      app.kubernetes.io/clickhouseRole: "Master"
-      {{- end }}
       app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "clickhouse.name" . }}
         app.kubernetes.io/release: {{ .Release.Name }}
-        {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
-        app.kubernetes.io/clickhouseRole: "Master"
-        {{- if and (.Values.clickhouse.cluster.replication) (.Values.clickhouse.cluster.enabled) }}
-        app.kubernetes.io/clickhouseOption: "replicated"
-        {{- end }}
-        {{- end }}
         app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+        app.kubernetes.io/shard: {{ $shard | quote }}
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
-        checksum/configmap-users: {{ include (print $.Template.BasePath "/configmap-users.yaml") . | sha256sum }}
-        checksum/configmap-config: {{ include (print $.Template.BasePath "/configmap-config.yaml") . | sha256sum }}
-        checksum/configmap-configs: {{ include (print $.Template.BasePath "/configmap-configs.yaml") . | sha256sum }}
-        checksum/configmap-configs-ext-cluster: {{ include (print $.Template.BasePath "/configmap-external-clusters.yaml") . | sha256sum }}
+        checksum/configmap-users: {{ include (print $.Template.BasePath "/cm-users.yaml") . | sha256sum }}
+        checksum/configmap-main-config: {{ include (print $.Template.BasePath "/cm-main-conf.yaml") . | sha256sum }}
+        checksum/configmap-cluster-config: {{ include (print $.Template.BasePath "/cm-cluster-conf.yaml") . | sha256sum }}
+        checksum/configmap-default-configs: {{ include (print $.Template.BasePath "/cm-default-confs.yaml") . | sha256sum }}
     spec:
+      securityContext:
+        fsGroup: 101
     {{- if .Values.clickhouse.affinity }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
-                  - key: "app.kubernetes.io/instance"
+                  - key: "app.kubernetes.io/shard"
                     operator: In
-                    values: [{{ include "clickhouse.fullname" . | quote }}]
-                  - key: "app.kubernetes.io/clickhouseRole"
-                    operator: In
-                    values: ["Master"]
+                    values: [{{ $shard | quote }}]
               topologyKey: "kubernetes.io/hostname"
         {{- if .Values.clickhouse.affinity.NodeAffinityCustom }}
         nodeAffinity: {{ toYaml .Values.clickhouse.affinity.NodeAffinityCustom | nindent 10 }}
@@ -81,8 +76,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              chown clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
-              rm -f {{ .Values.clickhouse.config.clickhouseDefaults.path }}/status
+              rm -f {{ .Values.clickhouse.config.clickhouseDefaults.path }}status
               {{- if .Values.fixPermission }}
               chown -R clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
               {{- end }}
@@ -108,17 +102,10 @@ spec:
                     mkdir /etc/clickhouse-server/spec
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
                     {{- end}}
-                    {{- if (.Values.tinyDicts) }}
-                    {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
-                    ln -s /etc/clickhouse-server/dictionaries/{{ $k }} {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}{{ $k }} || true;
-                    {{- end }}
-                    {{- end }}
           {{- end }}
-
           envFrom:
             - secretRef:
                 name: {{ include "clickhouse.fullname" . }}-secret
-
           ports:
             - name: http
               containerPort: {{ .Values.clickhouse.httpPort | default "8123" }}
@@ -130,19 +117,15 @@ spec:
             - name: metrics
               containerPort: {{ .Values.clickhouse.metrics.port | default "9363" }}
             {{- end }}
-
           {{- if default false .Values.clickhouse.readinessProbe }}
           readinessProbe: {{ toYaml .Values.clickhouse.readinessProbe | nindent 12 }}
           {{- end }}
-
-          {{- if default false .Values.clickhouse.livenessProbe }}
+          {{- if default false $.Values.clickhouse.livenessProbe }}
           livenessProbe: {{ toYaml .Values.clickhouse.livenessProbe | nindent 12 }}
           {{- end }}
-
           {{- if default false .Values.clickhouse.resources }}
           resources: {{ toYaml .Values.clickhouse.resources | nindent 12 }}
           {{- end }}
-
           volumeMounts:
             - name: {{ include "clickhouse.fullname" . }}-data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
@@ -154,14 +137,14 @@ spec:
             - name: clickhouse-in-mem-data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}/store
             {{- end }}
-            {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+            {{- if .Values.clickhouse.cluster.enabled  }}
             - name: clickhouse-macros
               mountPath: /opt/macros.xml
               subPath: macros.xml
             {{- end }}
-            {{- if (.Values.tinyDicts) }}
-            - name: dictionaries
-              mountPath: {{ .Values.tinyDicts.path }}
+            {{- if .Values.clickhouse.userFiles }}
+            - name: userfiles
+              mountPath: {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}
             {{- end }}
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
@@ -171,20 +154,15 @@ spec:
             - name: clickhouse-config
               mountPath: /etc/clickhouse-server/config.xml
               subPath: config.xml
-
           securityContext:
             runAsUser: 101
             capabilities:
               add: ["NET_ADMIN", "SYS_NICE", "IPC_LOCK"]
-
-    {{- if .Values.clickhouse.nodeSelector }}
-      nodeSelector: {{ toYaml .Values.clickhouse.nodeSelector | nindent 8 }}
-    {{- end }}
       volumes:
         {{- if (.Values.clickhouse.config) }}
         - name: clickhouse-config
           configMap:
-            name: {{ include "clickhouse.fullname" . }}-config
+            name: {{ include "clickhouse.fullname" . }}-main-config
             items:
             - key: config.xml
               path: config.xml
@@ -194,66 +172,64 @@ spec:
             items:
             - key: users.xml
               path: users.xml
-        {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+        {{- if .Values.clickhouse.cluster.enabled }}
         - name: clickhouse-macros
           configMap:
-            name: {{ include "clickhouse.fullname" . }}-clusters
+            name: {{ include "clickhouse.fullname" . }}-cluster-conf
             items:
             - key: macros.xml
               path: macros.xml
         {{- end }}
-        {{- if (.Values.tinyDicts) }}
-        - name: dictionaries
+        {{- if .Values.clickhouse.userFiles }}
+        - name: userfiles
           configMap:
-            name: {{ include "clickhouse.fullname" . }}-dictionaries
+            name: {{ include "clickhouse.fullname" . }}-userfiles
             items:
-          {{- range  $k,$v := .Values.tinyDicts.dictionaries }}
-            - key: {{ $k }}
-              path: {{ $k }}
-          {{- end }}
+            {{- range  $k,$v := .Values.clickhouse.userFiles }}
+              - key: {{ $k }}
+                path: {{ $k }}
+            {{- end }}
         {{- end }}
         - name: clickhouse-configs
           projected:
             sources:
-            {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+            {{- if .Values.clickhouse.cluster.enabled }}
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-clusters
+                  name: {{ include "clickhouse.fullname" . }}-cluster-conf
                   items:
-                  - key: clusters.xml
-                    path: clusters.xml
+                  - key: cluster.xml
+                    path: cluster.xml
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-cluster-conf
+                  items:
+                  - key: keeper.xml
+                    path: keeper.xml
               {{- end }}
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
                   items:
                   - key: logs.xml
                     path: logs.xml
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
                   items:
                   - key: merge_tree.xml
                     path: merge_tree.xml
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
                   items:
                   - key: compression.xml
                     path: compression.xml
                 {{- if .Values.clickhouse.metrics.enabled }}
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
                   items:
                   - key: metrics.xml
                     path: metrics.xml
                 {{- end }}
-                {{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
-              - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
-                  items:
-                  - key: zookeeper.xml
-                    path: zookeeper.xml
-                {{- end }}
                 {{- if .Values.clickhouse.config.kafka }}
               - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-configs
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
                   items:
                   - key: kafka.xml
                     path: kafka.xml
@@ -327,3 +303,5 @@ spec:
             storage: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storage | quote }}
     {{- end }}
   {{- end }}
+{{- end }}
+{{- end }}

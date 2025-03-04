@@ -1,18 +1,18 @@
-{{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
+{{- if .Values.clickhouseKeeper.enabled }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "clickhouse-keeper.fullname" . }}
 spec:
-  podManagementPolicy: {{ .Values.clickhouse.config.clickhouseKeeper.podManagementPolicy }}
+  podManagementPolicy: {{ .Values.clickhouseKeeper.podManagementPolicy }}
   updateStrategy:
-    type: {{ .Values.clickhouse.config.clickhouseKeeper.updateStrategy }}
-    {{- if (eq "Recreate" .Values.clickhouse.config.clickhouseKeeper.updateStrategy) }}
+    type: {{ .Values.clickhouseKeeper.updateStrategy }}
+    {{- if (eq "Recreate" .Values.clickhouseKeeper.updateStrategy) }}
     rollingUpdate: null
-    {{- else if .Values.clickhouse.config.clickhouseKeeper.rollingUpdatePartition }}
+    {{- else if .Values.clickhouseKeeper.rollingUpdatePartition }}
     rollingUpdate:
-      partition: {{ .Values.clickhouse.config.clickhouseKeeper.rollingUpdatePartition }}
+      partition: {{ .Values.clickhouseKeeper.rollingUpdatePartition }}
     {{- end }}
   selector:
     matchLabels:
@@ -20,7 +20,7 @@ spec:
       app.kubernetes.io/component: clickhouse-keeper
       app.kubernetes.io/release: {{ .Release.Name }}
   serviceName: "{{ include "clickhouse-keeper.fullname" . }}-headless"
-  replicas: {{ .Values.clickhouse.config.clickhouseKeeper.replicas }}
+  replicas: {{ .Values.clickhouseKeeper.replicas }}
   template:
     metadata:
       labels:
@@ -32,10 +32,10 @@ spec:
     spec:
       securityContext:
         fsGroup: 101
-    {{- if .Values.clickhouse.config.clickhouseKeeper.nodeSelector }}
-      nodeSelector: {{ toYaml .Values.clickhouse.config.clickhouseKeeper.nodeSelector | nindent 8 }}
+    {{- if .Values.clickhouseKeeper.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.clickhouseKeeper.nodeSelector | nindent 8 }}
     {{- end }}
-{{- if .Values.clickhouse.config.clickhouseKeeper.podAntiAffinity.enable }}
+{{- if .Values.clickhouseKeeper.podAntiAffinity.enable }}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -70,53 +70,53 @@ spec:
                   fieldPath: metadata.name
       containers:
         - name: clickhouse-keeper
-          image: {{ .Values.clickhouse.config.clickhouseKeeper.image }}:{{ .Values.clickhouse.config.clickhouseKeeper.imageVersion }}
+          image: {{ .Values.clickhouseKeeper.image }}:{{ .Values.clickhouseKeeper.imageVersion }}
           imagePullPolicy: IfNotPresent
           ports:
             - name: tcp-raft
-              containerPort: {{ .Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}
+              containerPort: {{ .Values.clickhouseKeeper.raftPort | default 9444 }}
             - name: tcp-connect
-              containerPort: {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+              containerPort: {{ .Values.clickhouseKeeper.tcpPort | default 2181 }}
           startupProbe:
             tcpSocket:
               port: tcp-raft
           readinessProbe:
             exec:
-              command: ['/bin/bash', '-c', 'echo ruok | nc 127.1 {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep imok']
+              command: ['/bin/bash', '-c', 'echo ruok | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep imok']
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ['/bin/bash', '-c', 'echo stat | nc 127.1 {{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep Received']
+              command: ['/bin/bash', '-c', 'echo stat | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep Received']
             initialDelaySeconds: 40
             periodSeconds: 5
           command: ["clickhouse-keeper", "--config", "/opt/keeper_config.xml"]
           securityContext:
             runAsUser: 101
-          {{- with .Values.clickhouse.config.clickhouseKeeper.resources }}
+          {{- with .Values.clickhouseKeeper.resources }}
           resources:
           {{- . | toYaml | nindent 12 }}
           {{- end }}
           volumeMounts:
           - name: temporaryvolume
             mountPath: /opt
-          {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
+          {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
           - name: {{ include "clickhouse-keeper.fullname" . }}-data
             mountPath: /var/lib/clickhouse_keeper
           {{- else }}
           - name: keeper-data
             mountPath: /var/lib/clickhouse_keeper
           {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.enabled }}
+      {{- if .Values.clickhouseKeeper.metrics.enabled }}
         - name: ch-keeper-exporter
           image: dabealu/zookeeper-exporter:v0.1.12
           imagePullPolicy: IfNotPresent
           ports:
             - name: metrics
-              containerPort: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.port | default 9141 }}
+              containerPort: {{ .Values.clickhouseKeeper.metrics.port | default 9141 }}
           command: ['/bin/sh', '-c']
           args:
-            - /usr/local/bin/zookeeper-exporter --zk-hosts $(echo $HOSTNAME):{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default 2181 }}
+            - /usr/local/bin/zookeeper-exporter --zk-hosts $(echo $HOSTNAME):{{ .Values.clickhouseKeeper.tcpPort | default 2181 }}
       {{- end }}
       volumes:
         - name: tmp-conf
@@ -124,7 +124,7 @@ spec:
             name: {{ include "clickhouse-keeper.fullname" . }}
         - name: temporaryvolume
           emptydir:
-        {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
+        {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
         - name: {{ include "clickhouse-keeper.fullname" . }}-data
           persistentVolumeClaim:
             claimName: {{ include "clickhouse-keeper.fullname" . }}-data
@@ -132,7 +132,7 @@ spec:
         - name: keeper-data
           emptydir:
         {{- end }}
-  {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.enabled }}
+  {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: {{ include "clickhouse-keeper.fullname" . }}-data
@@ -142,14 +142,14 @@ spec:
           app.kubernetes.io/release: {{ .Release.Name }}
       spec:
         accessModes:
-        {{- range .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.accessModes }}
+        {{- range .Values.clickhouseKeeper.persistentVolumeClaim.accessModes }}
           - {{ . | quote }}
         {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass }}
-        storageClassName: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
+      {{- if .Values.clickhouseKeeper.persistentVolumeClaim.storageClass }}
+        storageClassName: {{ .Values.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
       {{- end }}
         resources:
           requests:
-            storage: {{ .Values.clickhouse.config.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
+            storage: {{ .Values.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
   {{- end }}
 {{- end }}

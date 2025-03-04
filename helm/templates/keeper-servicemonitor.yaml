@@ -1,12 +1,12 @@
-{{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
-{{- if (.Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.enabled) }}
+{{- if .Values.clickhouseKeeper.enabled }}
+{{- if (.Values.clickhouseKeeper.metrics.serviceMonitor.enabled) }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "clickhouse-keeper.fullname" . }}
-  {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.namespace }}
-  namespace: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.namespace }}
+  {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.namespace }}
+  namespace: {{ .Values.clickhouseKeeper.metrics.serviceMonitor.namespace }}
   {{- else }}
   namespace: {{ .Release.Namespace }}
   {{- end }}
@@ -14,39 +14,39 @@ metadata:
     app.kubernetes.io/name: {{ include "clickhouse-keeper.fullname" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: metrics
-    {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.prometheusSelector "context" $ ) | nindent 4 }}
-    {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.additionalLabels }}
-    {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.additionalLabels "context" $ ) | nindent 4 }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouseKeeper.metrics.serviceMonitor.prometheusSelector "context" $ ) | nindent 4 }}
+    {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.additionalLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouseKeeper.metrics.serviceMonitor.additionalLabels "context" $ ) | nindent 4 }}
     {{- end }}
 spec:
-  {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.jobLabel }}
-  jobLabel: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.jobLabel }}
+  {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.jobLabel }}
+  jobLabel: {{ .Values.clickhouseKeeper.metrics.serviceMonitor.jobLabel }}
   {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Chart.Name }}-keeper
       app.kubernetes.io/release: {{ .Release.Name }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.selector }}
-      {{- include "common.tplvalues.render" (dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.selector "context" $) | nindent 6 }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.selector }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.clickhouseKeeper.metrics.serviceMonitor.selector "context" $) | nindent 6 }}
       {{- end }}
   endpoints:
     - port: metrics
       path: "/metrics"
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.interval }}
-      interval: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.interval }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.interval }}
+      interval: {{ .Values.clickhouseKeeper.metrics.serviceMonitor.interval }}
       {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
-      scrapeTimeout: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.clickhouseKeeper.metrics.serviceMonitor.scrapeTimeout }}
       {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.relabelings }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.relabelings }}
       relabelings:
-      {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.relabelings "context" $) | nindent 6 }}
+      {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouseKeeper.metrics.serviceMonitor.relabelings "context" $) | nindent 6 }}
       {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings }}
-      metricRelabelings: {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings "context" $) | nindent 6 }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings }}
+      metricRelabelings: {{- include "common.tplvalues.render" ( dict "value" .Values.clickhouseKeeper.metrics.serviceMonitor.metricRelabelings "context" $) | nindent 6 }}
       {{- end }}
-      {{- if .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.honorLabels }}
-      honorLabels: {{ .Values.clickhouse.config.clickhouseKeeper.metrics.serviceMonitor.honorLabels }}
+      {{- if .Values.clickhouseKeeper.metrics.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.clickhouseKeeper.metrics.serviceMonitor.honorLabels }}
       {{- end }}
   namespaceSelector:
     matchNames:

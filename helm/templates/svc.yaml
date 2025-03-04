@@ -18,9 +18,6 @@ spec:
   {{- if eq "loadbalancer" (.Values.clickhouse.externalAccess.type | lower)  }}
   type: LoadBalancer
   {{- end }}
-  {{- if .Values.clickhouse.externalAccess.LoadBalancer.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.clickhouse.externalAccess.LoadBalancer.loadBalancerIP }}
-  {{- end }}
   {{- end }}
   publishNotReadyAddresses: False
   ports:
@@ -39,12 +36,11 @@ spec:
     name: metrics
   {{- end }}
   selector:
-    {{- if and ( .Values.clickhouse.cluster.enabled ) ( .Values.clickhouse.cluster.replication) }}
-    app.kubernetes.io/clickhouseOption: "replicated"
-    {{- end }}
-    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
-{{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+
+{{- if and ( .Values.clickhouse.cluster.enabled ) }}
 ---
 apiVersion: v1
 kind: Service
@@ -52,20 +48,12 @@ metadata:
   name: {{ include "clickhouse.fullname" . }}-headless
   labels:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}-headless
-    app.kubernetes.io/instance: {{ .Release.Name }}-headless
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}-headless
+    app.kubernetes.io/release: {{ .Release.Name }}
 spec:
   clusterIP: "None"
   publishNotReadyAddresses: True
   ports:
-  - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp
-    protocol: TCP
-    name: tcp
-  - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http
-    protocol: TCP
-    name: http
   - port: {{ .Values.clickhouse.interserverHttpPort }}
     targetPort: inter-http
     protocol: TCP
@@ -74,36 +62,4 @@ spec:
     app.kubernetes.io/name: {{ include "clickhouse.name" . }}
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
-
-{{- if and ( .Values.clickhouse.cluster.enabled ) ( .Values.clickhouse.cluster.replication) }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "clickhouse.fullname" . }}-replica-headless
-  labels:
-    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica-headless
-    app.kubernetes.io/instance: {{ .Release.Name }}-replica-headless
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-spec:
-  clusterIP: "None"
-  publishNotReadyAddresses: True
-  ports:
-  - port: {{ .Values.clickhouse.tcpPort }}
-    targetPort: tcp
-    protocol: TCP
-    name: tcp
-  - port: {{ .Values.clickhouse.httpPort }}
-    targetPort: http
-    protocol: TCP
-    name: http
-  - port: {{ .Values.clickhouse.interserverHttpPort }}
-    targetPort: inter-http
-    protocol: TCP
-    name: inter-http
-  selector:
-    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-replica
-    app.kubernetes.io/release: {{ .Release.Name }}
-    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
-{{- end }}
 {{- end }}
