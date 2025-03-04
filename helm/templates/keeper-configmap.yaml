@@ -1,4 +1,4 @@
-{{- if .Values.clickhouse.config.clickhouseKeeper.enabled }}
+{{- if .Values.clickhouseKeeper.enabled }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -9,25 +9,25 @@ metadata:
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
-{{- $replicas := int .Values.clickhouse.config.clickhouseKeeper.replicas }}
+{{- $replicas := int .Values.clickhouseKeeper.replicas }}
 {{- $clickhousekeeper_full_name := include "clickhouse-keeper.fullname" . }}
   keeper_config.xml: |-
     <yandex>
       <logger>
-          <level>{{ .Values.clickhouse.config.clickhouseKeeper.logLevel }}</level>
+          <level>{{ .Values.clickhouseKeeper.logLevel }}</level>
           <console>1</console>
       </logger>
 
-      <max_connections>{{ .Values.clickhouse.config.clickhouseKeeper.max_connections | default 4096 }}</max_connections>
+      <max_connections>{{ .Values.clickhouseKeeper.max_connections | default 4096 }}</max_connections>
       <listen_host>0.0.0.0</listen_host>
       <keeper_server>
-        <tcp_port>{{ .Values.clickhouse.config.clickhouseKeeper.tcpPort | default "2181" }}</tcp_port>
+        <tcp_port>{{ .Values.clickhouseKeeper.tcpPort | default "2181" }}</tcp_port>
         <server_id>__CHANGEME__</server_id>
         <log_storage_path>/var/lib/clickhouse_keeper/log</log_storage_path>
         <snapshot_storage_path>/var/lib/clickhouse_keeper/snapshots</snapshot_storage_path>
 
         <coordination_settings>
-          {{- range $key, $value := .Values.clickhouse.config.clickhouseKeeper.coordinationSettings }}
+          {{- range $key, $value := .Values.clickhouseKeeper.coordinationSettings }}
             <{{ $key }}>{{ $value }}</{{ $key }}>
           {{- end }}
         </coordination_settings>
@@ -37,7 +37,7 @@ data:
             <server>
                 <id>{{ add . 1 }}</id>
                 <hostname>{{ $clickhousekeeper_full_name }}-{{ . }}.{{ $clickhousekeeper_full_name }}-headless.{{ $.Release.Namespace }}</hostname>
-                <port>{{ $.Values.clickhouse.config.clickhouseKeeper.raftPort | default 9444 }}</port>
+                <port>{{ $.Values.clickhouseKeeper.raftPort | default 9444 }}</port>
             </server>
         {{- end }}
         </raft_configuration>
