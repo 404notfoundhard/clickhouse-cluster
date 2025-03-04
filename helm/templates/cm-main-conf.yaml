@@ -12,7 +12,7 @@ data:
   config.xml: |-
     <?xml version="1.0"?>
     <clickhouse>
-      {{- if and ( .Values.clickhouse.cluster.enabled ) ( gt .Values.clickhouse.cluster.shards 1.0 ) }}
+      {{- if  .Values.clickhouse.cluster.enabled }}
       <include_from>/etc/clickhouse-server/spec/metrika.xml</include_from>
       <macros incl="macros_include" />
       {{- end }}
