@@ -89,7 +89,7 @@ spec:
         - name: {{ include "clickhouse.fullname" . }}
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}
           imagePullPolicy: {{ .Values.clickhouse.imagePullPolicy }}
-          {{- if or (gt .Values.clickhouse.cluster.shards 1.0) (.Values.tinyDicts) }}
+          {{- if .Values.clickhouse.cluster.enabled }}
           lifecycle:
             postStart:
               exec:
@@ -97,7 +97,7 @@ spec:
                   - "/bin/sh"
                   - "-c"
                   - |
-                    {{- if gt .Values.clickhouse.cluster.shards 1.0 }}
+                    {{- if .Values.clickhouse.cluster.enabled }}
                     var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
                     mkdir /etc/clickhouse-server/spec
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
