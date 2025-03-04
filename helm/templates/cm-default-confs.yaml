@@ -36,17 +36,6 @@ data:
       {{- end }}
     </clickhouse>
 
-
-  distributed_ddl.xml: |-
-    <?xml version="1.0"?>
-    </clickhouse>
-      <distributed_ddl>
-      {{- range $key, $value := .Values.clickhouse.config.distributed_ddl }}
-        <{{ $key }}>{{ $value }}</{{ $key }}>
-      {{- end }}
-      </distributed_ddl>
-    </clickhouse>
-
   merge_tree.xml: |-
     <?xml version="1.0"?>
     <clickhouse>

@@ -204,6 +204,11 @@ spec:
                   items:
                   - key: keeper.xml
                     path: keeper.xml
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-cluster-conf
+                  items:
+                  - key: distributed_ddl.xml
+                    path: distributed_ddl.xml
               {{- end }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-default-confs
