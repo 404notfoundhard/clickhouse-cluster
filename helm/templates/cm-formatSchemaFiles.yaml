@@ -1,4 +1,4 @@
-{{- if (.Values.clickhouse.formatSchemaFiles) }}
+{{- if .Values.clickhouse.formatSchemaFiles }}
 ---
 apiVersion: v1
 kind: ConfigMap

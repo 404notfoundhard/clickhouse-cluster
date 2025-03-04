@@ -194,7 +194,7 @@ spec:
                 path: {{ $k }}
             {{- end }}
         {{- end }}
-        {{- if .Values.clickhouse.userFiles }}
+        {{- if .Values.clickhouse.formatSchemaFiles }}
         - name: protofiles
           configMap:
             name: {{ include "clickhouse.fullname" . }}-protofiles
