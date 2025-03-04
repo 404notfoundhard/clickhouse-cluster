@@ -1,0 +1,17 @@
+{{- if (.Values.clickhouse.formatSchemaFiles) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clickhouse.fullname" . }}-protofiles
+  labels:
+    app.kubernetes.io/name: {{ include "clickhouse.name" . }}-protofiles
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{- range  $k,$v := .Values.clickhouse.formatSchemaFiles }}
+  {{ $k }}: |
+{{ $v | indent 4 }}
+{{- end }}
+{{- end }}

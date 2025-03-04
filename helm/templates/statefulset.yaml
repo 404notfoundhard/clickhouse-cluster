@@ -29,7 +29,7 @@ spec:
     rollingUpdate:
       partition: {{ $.Values.clickhouse.rollingUpdatePartition }}
     {{- end }}
-  {{- if $.Values.clickhouse.cluster.enabled }}
+  {{- if .Values.clickhouse.cluster.enabled }}
   serviceName: clickhouse-headless
   {{- else }}
   serviceName: clickhouse
@@ -146,6 +146,10 @@ spec:
             - name: userfiles
               mountPath: {{ $.Values.clickhouse.config.clickhouseDefaults.user_files_path }}
             {{- end }}
+            {{- if .Values.clickhouse.formatSchemaFiles }}
+            - name: protofiles
+              mountPath: {{ $.Values.clickhouse.config.clickhouseDefaults.format_schema_path }}
+            {{- end }}
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
@@ -186,6 +190,16 @@ spec:
             name: {{ include "clickhouse.fullname" . }}-userfiles
             items:
             {{- range  $k,$v := .Values.clickhouse.userFiles }}
+              - key: {{ $k }}
+                path: {{ $k }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.clickhouse.userFiles }}
+        - name: protofiles
+          configMap:
+            name: {{ include "clickhouse.fullname" . }}-protofiles
+            items:
+            {{- range  $k,$v := .Values.clickhouse.formatSchemaFiles }}
               - key: {{ $k }}
                 path: {{ $k }}
             {{- end }}
