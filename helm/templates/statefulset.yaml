@@ -98,7 +98,7 @@ spec:
                   - "-c"
                   - |
                     {{- if .Values.clickhouse.cluster.enabled }}
-                    var=$( printenv HOSTNAME | grep -Eo '[0-9]$');
+                    var=$(printenv HOSTNAME | sed -E -n 's/.*([0-9])-[0-9]$/\1/p');
                     mkdir /etc/clickhouse-server/spec
                     sed  "s/SHARD/shard$var/" /opt/macros.xml >> /etc/clickhouse-server/spec/metrika.xml;
                     {{- end}}
