@@ -229,8 +229,9 @@ clickhouse:
     failureThreshold: 3
     successThreshold: 1
   readinessProbe:
-    tcpSocket:
-      port: tcp
+    httpGet:
+      path: /ping
+      port: http
     initialDelaySeconds: 4
     periodSeconds: 2
     timeoutSeconds: 3
