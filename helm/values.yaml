@@ -153,6 +153,16 @@ clickhouse:
 #       26,"RSFTP"
 #       38,"RAP"
 
+  ## trusted ca's bundle for engine URL,dictionaries, etc. see https://clickhouse.com/docs/zh/knowledgebase/certificate_verify_failed_error
+  ## setted in openssl <caConfig>/etc/clickhouse-server/certs/ca.pem</caConfig>
+  ## example:
+  # trusted_certs: |
+  #   -----BEGIN CERTIFICATE-----
+  #   MIIEhTCCAu2gAwIBAgIBATANBgkqhkiG9w0BAQsFADA0MRIwEAYDVQQKDAlEQ09B
+  #   LkNPUlAxHjAcBgNVBAMMFUNlcnRpZmljYXRlIEF1dGhvcml0eTAeFw0yMzA3MjAx
+  #   MTQzMzRaFw00MzA3MjAxMTQzMzRaMDQxEjAQBgNVBAoMCURDT0EuQ09SUDEeMBwG
+  #   A1UEAwwVQ2VydGlmaWNhdGUgQXV0aG9yaXR5MIIBojANBgkqhkiG9w0BAQEFAAOC
+
 
   cluster:
     enabled: false
