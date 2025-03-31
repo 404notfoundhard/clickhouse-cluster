@@ -150,6 +150,10 @@ spec:
             - name: protofiles
               mountPath: {{ $.Values.clickhouse.config.clickhouseDefaults.format_schema_path }}
             {{- end }}
+            {{- if .Values.clickhouse.trusted_certs }}
+            - name: trusted-certs
+              mountPath: /etc/clickhouse-server/certs
+            {{- end }}
             - name: clickhouse-configs
               mountPath: /etc/clickhouse-server/config.d
             - name: clickhouse-users
@@ -204,6 +208,14 @@ spec:
                 path: {{ $k }}
             {{- end }}
         {{- end }}
+        {{- if .Values.clickhouse.trusted_certs }}
+        - name: trusted-certs
+          configMap:
+            name: {{ include "clickhouse.fullname" . }}-certs
+            items:
+              - key: ca.pem
+                path: ca.pem
+        {{- end }}
         - name: clickhouse-configs
           projected:
             sources:
@@ -213,14 +225,8 @@ spec:
                   items:
                   - key: cluster.xml
                     path: cluster.xml
-              - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-cluster-conf
-                  items:
                   - key: keeper.xml
                     path: keeper.xml
-              - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-cluster-conf
-                  items:
                   - key: distributed_ddl.xml
                     path: distributed_ddl.xml
               {{- end }}
@@ -229,16 +235,12 @@ spec:
                   items:
                   - key: logs.xml
                     path: logs.xml
-              - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-default-confs
-                  items:
                   - key: merge_tree.xml
                     path: merge_tree.xml
-              - configMap:
-                  name: {{ include "clickhouse.fullname" . }}-default-confs
-                  items:
                   - key: compression.xml
                     path: compression.xml
+                  - key: openssl.xml
+                    path: openssl.xml
                 {{- if .Values.clickhouse.metrics.enabled }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-default-confs

@@ -51,6 +51,32 @@ data:
       </merge_tree>
       {{- end }}
     </clickhouse>
+## hardcoded openssl params
+  openssl.xml: |-
+    <clickhouse>
+      <openSSL>
+          <server>
+              <verificationMode>none</verificationMode>
+              <loadDefaultCAFile>true</loadDefaultCAFile>
+              <cacheSessions>true</cacheSessions>
+              <disableProtocols>sslv2,sslv3</disableProtocols>
+              <preferServerCiphers>true</preferServerCiphers>
+              <invalidCertificateHandler>
+                  <name>RejectCertificateHandler</name>
+              </invalidCertificateHandler>
+          </server>
+          <client>
+              <loadDefaultCAFile>true</loadDefaultCAFile>
+              <cacheSessions>true</cacheSessions>
+              <caConfig>/etc/clickhouse-server/certs/ca.pem</caConfig>
+              <disableProtocols>sslv2,sslv3</disableProtocols>
+              <preferServerCiphers>true</preferServerCiphers>
+              <invalidCertificateHandler>
+                  <name>RejectCertificateHandler</name>
+              </invalidCertificateHandler>
+          </client>
+      </openSSL>
+    </clickhouse>
 
   compression.xml: |-
     <?xml version="1.0"?>
