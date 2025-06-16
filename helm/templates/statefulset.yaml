@@ -106,6 +106,9 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "clickhouse.fullname" . }}-secret
+          env:
+            - name: CLICKHOUSE_SKIP_USER_SETUP
+              value: "1"
           ports:
             - name: http
               containerPort: {{ .Values.clickhouse.httpPort | default "8123" }}
