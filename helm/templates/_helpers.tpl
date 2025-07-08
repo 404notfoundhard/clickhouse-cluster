@@ -34,17 +34,6 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 
-{{/*
-Create clickhouse log path.
-if .Values.clickhouse.config.logger.path is empty, default value "/var/log/clickhouse-server".
-*/}}
-{{- define "clickhouse.logpath" -}}
-{{- if .Values.clickhouse.config.logs.logger.log -}}
-{{- .Values.clickhouse.config.logs.logger.log | dir | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" "/var/log/clickhouse-server" -}}
-{{- end -}}
-{{- end -}}
 
 {{- define "clickhouse-keeper.fullname" -}}
 {{- if .Values.fullnameOverride -}}
