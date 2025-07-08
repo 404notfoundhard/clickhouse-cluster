@@ -1,3 +1,5 @@
+# fullnameOverride: test
+
 clusterDomain: "svc"
 
 additionalClusters: {}
@@ -111,6 +113,10 @@ clickhouseKeeper:
   metrics:
     enabled: false
     port: 9141
+    image:
+      name: dabealu/zookeeper-exporter
+      tag: "v0.1.12"
+      imagePullPolicy: IfNotPresent
     endpoint: /metrics
     serviceMonitor:
       enabled: false
@@ -259,8 +265,7 @@ clickhouse:
         - "ReadWriteOnce"
       # storageClassName: ""
       storage: "1Gi"
-    logsPersistentVolume:
-      enabled: false
+
 
   # TODO:
   # ingress:
@@ -406,7 +411,8 @@ clickhouse:
 
     ##
     ## Contains settings that allow ClickHouse to interact with a ZooKeeper cluster.
-    ## ClickHouse uses ZooKeeper for storing metadata of replicas when using replicated tables. If replicated tables are not used, this section of parameters can be omitted.
+    ## ClickHouse uses ZooKeeper for storing metadata of replicas when using replicated tables.
+    ## If replicated tables are not used, this section of parameters can be omitted.
     # node — ZooKeeper endpoint. You can set multiple endpoints.
     # session_timeout — Maximum timeout for the client session in milliseconds.
     # root — The znode that is used as the root for znodes used by the ClickHouse server. Optional.

@@ -30,9 +30,9 @@ spec:
       partition: {{ $.Values.clickhouse.rollingUpdatePartition }}
     {{- end }}
   {{- if .Values.clickhouse.cluster.enabled }}
-  serviceName: clickhouse-headless
+  serviceName: {{ include "clickhouse.fullname" . }}-headless
   {{- else }}
-  serviceName: clickhouse
+  serviceName: {{ include "clickhouse.fullname" . }}
   {{- end }}
   selector:
     matchLabels:
@@ -81,7 +81,7 @@ spec:
               chown -R clickhouse:clickhouse {{ .Values.clickhouse.config.clickhouseDefaults.path }}
               {{- end }}
           volumeMounts:
-            - name: {{ include "clickhouse.fullname" . }}-data
+            - name: data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
           securityContext:
             runAsUser: 0
@@ -130,12 +130,8 @@ spec:
           resources: {{ toYaml .Values.clickhouse.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: {{ include "clickhouse.fullname" . }}-data
+            - name: data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}
-            {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
-            - name: {{ include "clickhouse.fullname" . }}-logs
-              mountPath: {{ include "clickhouse.logpath" . }}
-            {{- end }}
             {{- if .Values.clickhouse.persistentVolumeClaim.inMemData.enabled }}
             - name: clickhouse-in-mem-data
               mountPath: {{ .Values.clickhouse.config.clickhouseDefaults.path }}/store
@@ -266,27 +262,18 @@ spec:
                     path: ext-clusters.xml
                 {{- end }}
         {{- end }}
-        - name: {{ include "clickhouse.fullname" . }}-data
-        {{- if .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "clickhouse.fullname" . }}-data
-        {{- end }}
         {{- if .Values.clickhouse.persistentVolumeClaim.inMemData.enabled }}
         - name: clickhouse-in-mem-data
           emptyDir:
             medium: Memory
             sizeLimit: {{ .Values.clickhouse.persistentVolumeClaim.inMemData.size }}
         {{- end }}
-        {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
-        - name: {{ include "clickhouse.fullname" . }}-logs
-          persistentVolumeClaim:
-            claimName: {{ include "clickhouse.fullname" . }}-logs
-        {{- end }}
+
   {{- if .Values.clickhouse.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
     {{- if .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.enabled }}
     - metadata:
-        name: {{ include "clickhouse.fullname" . }}-data
+        name: data
         labels:
           app.kubernetes.io/name: {{ include "clickhouse.name" . }}-data
           app.kubernetes.io/release: {{ .Release.Name }}
@@ -303,28 +290,6 @@ spec:
         resources:
           requests:
             storage: {{ .Values.clickhouse.persistentVolumeClaim.dataPersistentVolume.storage | quote }}
-    {{- end }}
-    {{- if .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.enabled }}
-    - metadata:
-        name: {{ include "clickhouse.fullname" . }}-logs
-        labels:
-          app.kubernetes.io/name: {{ include "clickhouse.name" . }}-logs
-          app.kubernetes.io/release: {{ .Release.Name }}
-          app.kubernetes.io/instance: {{ include "clickhouse.fullname" . }}
-          app.kubernetes.io/managed-by: {{ .Release.Service }}
-      spec:
-        accessModes:
-      {{- range .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.accessModes }}
-        - {{ . | quote }}
-      {{- end }}
-      {{- if (eq "-" .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName) }}
-        storageClassName: ""
-      {{- else }}
-        storageClassName: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storageClassName | quote }}
-      {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.clickhouse.persistentVolumeClaim.logsPersistentVolume.storage | quote }}
     {{- end }}
   {{- end }}
 {{- end }}

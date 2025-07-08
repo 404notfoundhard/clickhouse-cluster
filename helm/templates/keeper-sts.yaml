@@ -101,7 +101,7 @@ spec:
           - name: temporaryvolume
             mountPath: /opt
           {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
-          - name: {{ include "clickhouse-keeper.fullname" . }}-data
+          - name: data
             mountPath: /var/lib/clickhouse_keeper
           {{- else }}
           - name: keeper-data
@@ -109,8 +109,8 @@ spec:
           {{- end }}
       {{- if .Values.clickhouseKeeper.metrics.enabled }}
         - name: ch-keeper-exporter
-          image: dabealu/zookeeper-exporter:v0.1.12
-          imagePullPolicy: IfNotPresent
+          image: {{ .Values.clickhouseKeeper.metrics.image.name }}:{{ .Values.clickhouseKeeper.metrics.image.tag }}
+          imagePullPolicy: {{ .Values.clickhouseKeeper.metrics.image.imagePullPolicy }}
           ports:
             - name: metrics
               containerPort: {{ .Values.clickhouseKeeper.metrics.port | default 9141 }}
@@ -125,9 +125,6 @@ spec:
         - name: temporaryvolume
           emptydir:
         {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
-        - name: {{ include "clickhouse-keeper.fullname" . }}-data
-          persistentVolumeClaim:
-            claimName: {{ include "clickhouse-keeper.fullname" . }}-data
         {{- else }}
         - name: keeper-data
           emptydir:
@@ -135,7 +132,7 @@ spec:
   {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
     - metadata:
-        name: {{ include "clickhouse-keeper.fullname" . }}-data
+        name: data
         labels:
           app.kubernetes.io/name: {{ .Chart.Name }}-keeper
           app.kubernetes.io/component: clickhouse-keeper
