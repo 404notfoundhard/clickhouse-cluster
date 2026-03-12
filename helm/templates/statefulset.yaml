@@ -69,6 +69,10 @@ spec:
         nodeAffinity: {{ toYaml .Values.clickhouse.affinity.NodeAffinityCustom | nindent 10 }}
         {{- end }}
     {{- end }}
+      {{- with .Values.clickhouse.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
         - name: init-clickhouse
           image: {{ .Values.clickhouse.image }}:{{ .Values.clickhouse.imageVersion }}

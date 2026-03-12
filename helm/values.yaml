@@ -215,7 +215,11 @@ clickhouse:
   # affinity:
   #   NodeAffinityCustom: {}
   #   preset: "required"
-
+  # tolerations:
+  #   - key: "dedicated"
+  #     operator: "Equal"
+  #     value: "db"
+  #     effect: "NoSchedule"
 
   httpPort: "8123"
   tcpPort: "9000"
