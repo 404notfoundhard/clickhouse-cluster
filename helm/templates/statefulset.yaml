@@ -69,6 +69,9 @@ spec:
         nodeAffinity: {{ toYaml .Values.clickhouse.affinity.NodeAffinityCustom | nindent 10 }}
         {{- end }}
     {{- end }}
+    {{- if .Values.clickhouse.tolerations }}
+      tolerations: {{ toYaml .Values.clickhouse.tolerations | nindent 6 }}
+    {{- end }}
       {{- with .Values.clickhouse.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
