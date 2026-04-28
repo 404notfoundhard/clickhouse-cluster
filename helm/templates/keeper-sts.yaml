@@ -53,6 +53,10 @@ spec:
                     values:
                       - {{ include "clickhouse-keeper.fullname" . }}
               topologyKey: "kubernetes.io/hostname"
+        {{- if .Values.clickhouseKeeper.NodeAffinityCustom }}
+        nodeAffinity: {{ toYaml .Values.clickhouseKeeper.NodeAffinityCustom | nindent 10 }}
+        {{- end }}
+
 {{- end }}
       initContainers:
         - name: busybox

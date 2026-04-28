@@ -108,6 +108,7 @@ clickhouseKeeper:
     stale_log_gap: "10000"
     startup_timeout: "30000"
   customLabels: {}
+  # NodeAffinityCustom: {}
   podAntiAffinity:
     enable: false
   metrics:
