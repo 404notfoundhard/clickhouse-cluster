@@ -286,6 +286,16 @@ clickhouse:
   #   #     - clickhouse.domain.corp
 
   config:
+    # named_collections:
+    #   pgpro:
+    #     host: postgres.csuo.svc
+    #     port: 5432
+    #     database: geo_rule
+    #     user: clickhouse
+    #     password: SecretPassword123
+    #     schema: public
+
+
     clickhouseDefaults:
       path: /var/lib/clickhouse/
       tmp_path: /var/lib/clickhouse/tmp/
