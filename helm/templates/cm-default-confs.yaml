@@ -109,4 +109,23 @@ data:
       </kafka>
     </clickhouse>
   {{- end }}
-{{- end }}
+  {{- if .Values.clickhouse.config.named_collections }}
+  named_collections.xml: |-
+    <?xml version="1.0"?>
+    <clickhouse>
+        <named_collections>
+        {{- range $collectionName, $collectionParams := .Values.clickhouse.config.named_collections }}
+            <{{ $collectionName }}>
+            {{- range $key, $value := $collectionParams }}
+              {{- if eq $key "password" }}
+                <password from_env="{{ printf "%s_NMD_PASSWORD" ($collectionName | upper) }}" />
+              {{- else }}
+                <{{ $key }}>{{ $value }}</{{ $key }}>
+              {{- end }}
+            {{- end }}
+            </{{ $collectionName }}>
+        {{- end }}
+        </named_collections>
+    </clickhouse>
+  {{- end }}
+  {{- end }}
