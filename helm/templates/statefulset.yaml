@@ -261,6 +261,13 @@ spec:
                   - key: kafka.xml
                     path: kafka.xml
                 {{- end }}
+                {{- if .Values.clickhouse.config.named_collections }}
+              - configMap:
+                  name: {{ include "clickhouse.fullname" . }}-default-confs
+                  items:
+                  - key: named_collections.xml
+                    path: named_collections.xml
+                {{- end }}
                 {{- if (.Values.additionalClusters) }}
               - configMap:
                   name: {{ include "clickhouse.fullname" . }}-ext-clusters
