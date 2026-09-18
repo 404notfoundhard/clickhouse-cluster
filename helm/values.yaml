@@ -79,7 +79,16 @@ clickhouseKeeper:
   customLabels: {}
   externalAccess:
     enabled: false
-    # loadBalancerIP: 10.10.10.10
+    annotations: {}
+      # Для MetalLB:
+      # metallb.universe.tf/loadBalancerIPs: 10.10.10.10
+      # Для Yandex Cloud / Kube-VIP / Cloud-провайдеров:
+      # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+      # Пример cilium
+      #  annotations:
+      #    io.cilium/lb-ipam-ips: 172.16.60.81
+      #    io.cilium/lb-ipam-sharing-cross-namespace: '*'
+      #    io.cilium/lb-ipam-sharing-key: "ch-kafka"
   replicas: 1 # must be 1,3,5,7, etc for quorum
   tcpPort: 2181 # default value
   raftPort: 9444 # default value
