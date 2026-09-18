@@ -33,13 +33,16 @@ spec:
       securityContext:
         fsGroup: 101
     {{- if .Values.clickhouseKeeper.tolerations }}
-      tolerations: {{ toYaml .Values.clickhouse.tolerations | nindent 6 }}
+      tolerations: {{ toYaml .Values.clickhouseKeeper.tolerations | nindent 8 }}
     {{- end }}
     {{- if .Values.clickhouseKeeper.nodeSelector }}
       nodeSelector: {{ toYaml .Values.clickhouseKeeper.nodeSelector | nindent 8 }}
     {{- end }}
-{{- if .Values.clickhouseKeeper.podAntiAffinity.enable }}
+    {{- $preset := default "" .Values.clickhouseKeeper.antiAffinityPreset | toString }}
+    {{- $hasNodeAffinity := .Values.clickhouseKeeper.nodeAffinity }}
+    {{- if or (eq $preset "required") (eq $preset "preferred") $hasNodeAffinity }}
       affinity:
+      {{- if eq $preset "required" }}
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
@@ -51,13 +54,29 @@ spec:
                   - key: "app.kubernetes.io/release"
                     operator: In
                     values:
-                      - {{ include "clickhouse-keeper.fullname" . }}
+                      - {{ .Release.Name }}
               topologyKey: "kubernetes.io/hostname"
-        {{- if .Values.clickhouseKeeper.NodeAffinityCustom }}
-        nodeAffinity: {{ toYaml .Values.clickhouseKeeper.NodeAffinityCustom | nindent 10 }}
-        {{- end }}
-
-{{- end }}
+      {{- else if eq $preset "preferred" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: "app.kubernetes.io/name"
+                      operator: In
+                      values:
+                        - {{ .Chart.Name }}-keeper
+                    - key: "app.kubernetes.io/release"
+                      operator: In
+                      values:
+                        - {{ .Release.Name }}
+                topologyKey: "kubernetes.io/hostname"
+      {{- end }}
+      {{- if $hasNodeAffinity }}
+        nodeAffinity: {{ toYaml .Values.clickhouseKeeper.nodeAffinity | nindent 10 }}
+      {{- end }}
+    {{- end }}
       initContainers:
         - name: busybox
           image: busybox:1.35.0
@@ -79,6 +98,11 @@ spec:
         - name: clickhouse-keeper
           image: {{ .Values.clickhouseKeeper.image }}:{{ .Values.clickhouseKeeper.imageVersion }}
           imagePullPolicy: IfNotPresent
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           ports:
             - name: tcp-raft
               containerPort: {{ .Values.clickhouseKeeper.raftPort | default 9444 }}
@@ -89,12 +113,12 @@ spec:
               port: tcp-raft
           readinessProbe:
             exec:
-              command: ['/bin/bash', '-c', 'echo ruok | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep imok']
+              command: ['/bin/bash', '-c', 'echo ruok | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 }} | grep imok']
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             exec:
-              command: ['/bin/bash', '-c', 'echo stat | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 | quote }} | grep Received']
+              command: ['/bin/bash', '-c', 'echo stat | nc 127.1 {{ .Values.clickhouseKeeper.tcpPort | default 2181 }} | grep Received']
             initialDelaySeconds: 40
             periodSeconds: 5
           command: ["clickhouse-keeper", "--config", "/opt/keeper_config.xml"]
@@ -102,18 +126,17 @@ spec:
             runAsUser: 101
           {{- with .Values.clickhouseKeeper.resources }}
           resources:
-          {{- . | toYaml | nindent 12 }}
+          {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
           - name: temporaryvolume
             mountPath: /opt
-          {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
           - name: data
             mountPath: /var/lib/clickhouse_keeper
-          {{- else }}
-          - name: keeper-data
-            mountPath: /var/lib/clickhouse_keeper
-          {{- end }}
+            {{- if .Values.clickhouseKeeper.storage.hostPath.enabled }}
+            subPathExpr: $(MY_POD_NAME)
+            {{- end }}
+
       {{- if .Values.clickhouseKeeper.metrics.enabled }}
         - name: ch-keeper-exporter
           image: {{ .Values.clickhouseKeeper.metrics.image.name }}:{{ .Values.clickhouseKeeper.metrics.image.tag }}
@@ -130,13 +153,18 @@ spec:
           configMap:
             name: {{ include "clickhouse-keeper.fullname" . }}
         - name: temporaryvolume
-          emptydir:
-        {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
-        {{- else }}
-        - name: keeper-data
-          emptydir:
+          emptyDir: {}
+        {{- if .Values.clickhouseKeeper.storage.hostPath.enabled }}
+        - name: data
+          hostPath:
+            path: {{ .Values.clickhouseKeeper.storage.hostPath.hostPath }}
+            type: DirectoryOrCreate
+        {{- else if not .Values.clickhouseKeeper.storage.persistentVolumeClaim.enabled }}
+        - name: data
+          emptyDir: {}
         {{- end }}
-  {{- if .Values.clickhouseKeeper.persistentVolumeClaim.enabled }}
+
+  {{- if .Values.clickhouseKeeper.storage.persistentVolumeClaim.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -146,14 +174,14 @@ spec:
           app.kubernetes.io/release: {{ .Release.Name }}
       spec:
         accessModes:
-        {{- range .Values.clickhouseKeeper.persistentVolumeClaim.accessModes }}
+        {{- range .Values.clickhouseKeeper.storage.persistentVolumeClaim.accessModes }}
           - {{ . | quote }}
         {{- end }}
-      {{- if .Values.clickhouseKeeper.persistentVolumeClaim.storageClass }}
-        storageClassName: {{ .Values.clickhouseKeeper.persistentVolumeClaim.storageClass | quote }}
+      {{- if .Values.clickhouseKeeper.storage.persistentVolumeClaim.storageClass }}
+        storageClassName: {{ .Values.clickhouseKeeper.storage.persistentVolumeClaim.storageClass | quote }}
       {{- end }}
         resources:
           requests:
-            storage: {{ .Values.clickhouseKeeper.persistentVolumeClaim.capacity | quote }}
+            storage: {{ .Values.clickhouseKeeper.storage.persistentVolumeClaim.capacity | quote }}
   {{- end }}
 {{- end }}
