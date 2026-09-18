@@ -8,9 +8,12 @@ metadata:
     app.kubernetes.io/name: {{ .Chart.Name }}-keeper
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- if and .Values.clickhouseKeeper.externalAccess.enabled .Values.clickhouseKeeper.externalAccess.annotations }}
+  annotations:
+    {{- toYaml .Values.clickhouseKeeper.externalAccess.annotations | nindent 4 }}
+  {{- end }}
 spec:
   {{- if .Values.clickhouseKeeper.externalAccess.enabled }}
-  loadBalancerIP: {{ .Values.clickhouseKeeper.externalAccess.loadBalancerIP }}
   type: LoadBalancer
   {{- end }}
   publishNotReadyAddresses: False
