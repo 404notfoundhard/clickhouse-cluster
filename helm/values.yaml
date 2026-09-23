@@ -315,7 +315,15 @@ clickhouse:
     #     user: clickhouse
     #     password: SecretPassword123
     #     schema: public
-
+      # kafka_ch:
+      #   kafka_broker_list: "172.17.30.80:9094,172.17.30.81:9094,172.17.30.82:9094"
+      #   kafka:
+      #     sasl_mechanism: "SCRAM-SHA-512"
+      #     sasl_username: "clickhouse"
+      #     sasl_password: "passs"
+      #     security_protocol: "SASL_SSL"
+      #     partition_assignment_strategy: "roundrobin"
+      #     ssl_ca_location: "/etc/clickhouse-server/certs/ca.pem"
 
     clickhouseDefaults:
       path: /var/lib/clickhouse/

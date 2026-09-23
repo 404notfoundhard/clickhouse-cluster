@@ -6,6 +6,46 @@ Expand the name of the chart.
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{/* Рекурсивный генератор XML узлов для ConfigMap */}}
+{{- define "clickhouse.render_xml_node" -}}
+{{- $parentName := .parentName -}}
+{{- $key := .key -}}
+{{- $value := .value -}}
+
+{{- if kindIs "map" $value -}}
+<{{ $key }}>
+{{- range $subKey, $subValue := $value }}
+{{ include "clickhouse.render_xml_node" (dict "parentName" $parentName "key" $subKey "value" $subValue) | indent 2 }}
+{{- end }}
+</{{ $key }}>
+{{- else if hasSuffix "password" $key -}}
+{{- $envPrefix := $parentName | upper | replace "-" "_" -}}
+{{- $envKey := $key | upper -}}
+<{{ $key }} from_env="{{ $envPrefix }}_NMD_{{ $envKey }}" />
+{{- else -}}
+<{{ $key }}>{{ $value }}</{{ $key }}>
+{{- end -}}
+{{- end -}}
+
+{{/* Поиск и кодирование паролей для Secret */}}
+{{- define "clickhouse.render_secret_passwords" -}}
+{{- $parentName := .parentName -}}
+{{- $key := .key -}}
+{{- $value := .value -}}
+
+{{- if kindIs "map" $value -}}
+  {{- range $subKey, $subValue := $value }}
+    {{- include "clickhouse.render_secret_passwords" (dict "parentName" $parentName "key" $subKey "value" $subValue) }}
+  {{- end }}
+{{- else if hasSuffix "password" $key -}}
+  {{- if $value -}}
+    {{- $envPrefix := $parentName | upper | replace "-" "_" -}}
+    {{- $envKey := $key | upper -}}
+{{ printf "%s_NMD_%s" $envPrefix $envKey }}: {{ $value | toString | b64enc }}
+{{ end -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).

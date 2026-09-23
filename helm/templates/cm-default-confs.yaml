@@ -117,11 +117,7 @@ data:
         {{- range $collectionName, $collectionParams := .Values.clickhouse.config.named_collections }}
             <{{ $collectionName }}>
             {{- range $key, $value := $collectionParams }}
-              {{- if eq $key "password" }}
-                <password from_env="{{ printf "%s_NMD_PASSWORD" ($collectionName | upper) }}" />
-              {{- else }}
-                <{{ $key }}>{{ $value }}</{{ $key }}>
-              {{- end }}
+              {{- include "clickhouse.render_xml_node" (dict "parentName" $collectionName "key" $key "value" $value) | nindent 14 -}}
             {{- end }}
             </{{ $collectionName }}>
         {{- end }}
